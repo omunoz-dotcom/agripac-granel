@@ -947,7 +947,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gr);}
 <!-- Modal despacho config -->
 <div class="overlay" id="m-desp">
   <div class="modal">
-    <div class="mh"><span style="font-size:14px;font-weight:500;"><i class="ti ti-building-warehouse"></i> Configurar despacho</span><button class="btn btn-sm" onclick="cerrar('m-desp')"><i class="ti ti-x"></i></button></div>
+    <div class="mh"><span style="font-size:14px;font-weight:500;" id="m-desp-title"><i class="ti ti-building-warehouse"></i> Configurar despacho</span><button class="btn btn-sm" id="m-desp-x" onclick="cerrar('m-desp')"><i class="ti ti-x"></i></button></div>
     <div id="m-desp-body"></div>
     <div id="m-desp-actions" style="margin-top:1rem;"></div>
   </div>
@@ -1356,8 +1356,8 @@ function sugerirAndenes(areaCarga){
   return REGLAS_ASIGNACION[key].filter(id=>{ const a=andenes.find(x=>x.id===id); return a&&a.libre; });
 }
 
-const PASOS=['pendiente','garita-entrada','bascula-entrada','despacho','cargando','bascula-salida','garita-salida','completado'];
-const PNOMBRES=['Pendiente','Garita E.','Báscula E.','Despacho','Cargando','Báscula S.','Garita S.','Completado'];
+const PASOS=['pendiente','garita-entrada','bascula-entrada','despacho','cargando','cierre-docs','bascula-salida','garita-salida','completado'];
+const PNOMBRES=['Pendiente','Garita E.','Báscula E.','Despacho','Cargando','Cierre docs','Báscula S.','Garita S.','Completado'];
 
 // ══════════════════════════════════════════════════════════
 // RELOJ
@@ -1535,7 +1535,7 @@ function actualizarBadges(){
   document.getElementById('nb-qr').textContent=qrc;
   document.getElementById('nb-ge').textContent=cnt('pendiente')+cnt('garita-entrada');
   document.getElementById('nb-be').textContent=cnt('garita-entrada');
-  document.getElementById('nb-d').textContent=cnt('bascula-entrada')+cnt('despacho')+cnt('cargando');
+  document.getElementById('nb-d').textContent=cnt('bascula-entrada')+cnt('despacho')+cnt('cargando')+cnt('cierre-docs');
   document.getElementById('nb-bs').textContent=cnt('cargando');
   document.getElementById('nb-gs').textContent=cnt('bascula-salida')+cnt('garita-salida');
 }
@@ -1629,8 +1629,8 @@ function checkAlertas(){
 // op: 'descarga' cambia las etiquetas de carga por descarga
 function esDescarga(rv){ return !!rv && (rv.operacion==='descarga' || (rv.granel && Number(rv.netoOrigenKg)>0)); }
 function estadoBadge(est, op){
-  const m={pendiente:'b-pend',garita:' b-garita','garita-entrada':'b-garita','bascula-entrada':'b-bascula',despacho:'b-desp',cargando:'b-carga','bascula-salida':'b-bascula','garita-salida':'b-garita',completado:'b-salida'};
-  const n={pendiente:'Pendiente','garita-entrada':'Garita E.','bascula-entrada':'Báscula E.',despacho:'Despacho',cargando:op==='descarga'?'⟳ Descargando':'⟳ Cargando','bascula-salida':'Báscula S.','garita-salida':'Aut. salida',completado:'Completado'};
+  const m={pendiente:'b-pend',garita:' b-garita','garita-entrada':'b-garita','bascula-entrada':'b-bascula',despacho:'b-desp',cargando:'b-carga','cierre-docs':'b-pend','bascula-salida':'b-bascula','garita-salida':'b-garita',completado:'b-salida'};
+  const n={pendiente:'Pendiente','garita-entrada':'Garita E.','bascula-entrada':'Báscula E.',despacho:'Despacho',cargando:op==='descarga'?'⟳ Descargando':'⟳ Cargando','cierre-docs':'📄 Cierre docs','bascula-salida':'Báscula S.','garita-salida':'Aut. salida',completado:'Completado'};
   return`<span class="badge ${m[est]||'b-pend'}">${n[est]||est}</span>`;
 }
 
@@ -1665,7 +1665,7 @@ function renderPlan(){
       ?`<button class="btn btn-purple btn-sm" onclick="showTab('bascula-e')"><i class="ti ti-weight"></i> Báscula</button>`
       :['bascula-entrada'].includes(est)
       ?`<button class="btn btn-warn btn-sm" onclick="showTab('despacho')"><i class="ti ti-building-warehouse"></i> Despacho</button>`
-      :['despacho','cargando'].includes(est)
+      :['despacho','cargando','cierre-docs'].includes(est)
       ?`<button class="btn btn-sm" onclick="showTab('despacho')"><i class="ti ti-eye"></i> Ver carga</button>`
       :est==='bascula-salida'
       ?`<button class="btn btn-sm" onclick="showTab('garita-s')"><i class="ti ti-logout"></i> Autorizar</button>`
@@ -2462,6 +2462,12 @@ function dBuscar(){
       <div><div class="sl">PESO ENTRADA</div><span style="font-family:var(--mono);font-weight:600;">${rv.peBruto.toLocaleString('es-EC')} kg</span></div>
     </div>
   </div>`;
+  if(est==='cierre-docs'){
+    el.innerHTML=info+`
+      <div class="alert a-warn" style="margin-bottom:10px;"><i class="ti ti-file-check"></i> ${esDescarga(rv)?'Descarga':'Carga'} finalizada a las <strong>${rv.tsFinC||'—'}</strong> (${rv.tiempoC||'—'}). Falta cerrar con la entrega de documentos para pasar a báscula.</div>
+      <button class="btn btn-primary" onclick="dAbrirCierre('${id}')" style="width:100%;"><i class="ti ti-file-check"></i> Cerrar y entregar documentos</button>`;
+    return;
+  }
   if(['despacho','cargando'].includes(est)){
     const cr=cronos[id],cid='crono-'+id.replace(/[^a-z0-9]/gi,'_');
     const t=cr?fmtCrono(cr.elapsed+(cr.running?Date.now()-cr.start:0)):'00:00:00';
@@ -2479,6 +2485,8 @@ function dBuscar(){
 }
 function dAbrirConfig(uid){
   const rv=reg[uid]; modalData.uid=uid;
+  document.getElementById('m-desp-title').innerHTML='<i class="ti ti-building-warehouse"></i> Configurar despacho';
+  document.getElementById('m-desp-x').style.display='';
   // Granel se descarga en volteador/silos (regla ALMACENERA)
   // Segmentación: descarga → solo áreas de recepción · carga → solo áreas de despacho
   const op=esDescarga(rv)?'descarga':'carga';
@@ -2515,12 +2523,6 @@ function dAbrirConfig(uid){
     <div class="field"><span class="fl">Despachador responsable</span>
       <input type="text" id="d-desp" placeholder="Nombre del despachador"/>
     </div>
-    <div class="field"><span class="fl">Documentos entregados</span>
-      <div style="display:flex;gap:10px;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="d-docs" value="si" checked/> Sí, entregados</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="d-docs" value="no"/> No entregados</label>
-      </div>
-    </div>
     <div class="field"><span class="fl">Observaciones</span>
       <textarea id="d-obs" rows="2" placeholder="Notas adicionales"></textarea>
     </div>`;
@@ -2541,16 +2543,15 @@ function dConfigurar(){
     ?(document.getElementById('d-anden-manual')?.value||'Manual')
     :(andenes.find(a=>a.id===aid)?.nombre||aid);
   const desp=document.getElementById('d-desp')?.value.trim()||'Sin asignar';
-  const docs=document.querySelector('input[name="d-docs"]:checked')?.value==='si';
   rv.anden=andenNombre; rv.andenId=aid;
-  rv.despachador=desp; rv.docs=docs;
+  rv.despachador=desp; rv.docs=false;   // los documentos se entregan al cerrar
   rv.obsDesp=document.getElementById('d-obs')?.value||'';
   rv.tsDesp=horaActual();
   // Marcar andén ocupado si es área configurada
   if(!isManual){ const a=andenes.find(x=>x.id===aid);if(a){a.libre=false;a.uid=uid;a.lbl=rv.placa;} }
   DB.guardarAndenes();   // ← persiste estado de andenes
   avanzar(uid,'despacho');
-  audit('Despacho',uid,rv.chofer,rv.placa,andenNombre+' · '+desp+(docs?' · Docs OK':' · Sin docs'));
+  audit('Despacho',uid,rv.chofer,rv.placa,'Área asignada: '+andenNombre+' · '+desp);
   cerrar('m-desp');
   // Notif WA al conductor
   const tel=rv.tel?rv.tel.replace(/\D/g,''):'';
@@ -2574,21 +2575,77 @@ function dFinalizar(uid){
   if(cr){clearInterval(cr._int);clearInterval(cr._intd);cr.elapsed+=Date.now()-cr.start;cr.running=false;}
   rv.tsFinC=horaActual();rv.tiempoC=cr?fmtCrono(cr.elapsed):'—';
   const a=andenes.find(x=>x.uid===uid);if(a){a.libre=true;a.uid=null;a.lbl='';}
-  DB.guardarAndenes();   // ← persiste estado de andenes
-  avanzar(uid,'bascula-salida');
+  DB.guardarAndenes();   // ← libera el área para la siguiente unidad
+  avanzar(uid,'cierre-docs');   // ← aún no pasa a báscula: falta cierre con documentos
   audit('Despacho',uid,rv.chofer,rv.placa,(esDescarga(rv)?'Fin descarga · tiempo: ':'Fin carga · tiempo: ')+rv.tiempoC);
   renderCargasActivas();renderAndenes();
   document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
+  dAbrirCierre(uid);   // abre de una vez el cierre con documentos
+}
+
+// ── Cierre de despacho/recepción con entrega de documentos → habilita báscula ──
+function dAbrirCierre(uid){
+  const rv=reg[uid]; if(!rv) return;
+  modalData.uid=uid;
+  const desc=esDescarga(rv);
+  // Cierre obligatorio e inmediato: sin botón de cerrar ni "más tarde"
+  document.getElementById('m-desp-title').innerHTML='<i class="ti ti-file-check"></i> Cierre con entrega de documentos';
+  document.getElementById('m-desp-x').style.display='none';
+  document.getElementById('m-desp-body').innerHTML=`
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.75rem;margin-bottom:10px;font-size:12px;">
+      <strong>${uid}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span>
+      <div style="margin-top:3px;color:var(--tx2);">${desc?'Descarga':'Carga'} en <strong>${rv.anden||'—'}</strong> · ${rv.tsIniC||'—'} → ${rv.tsFinC||'—'} (${rv.tiempoC||'—'})</div>
+    </div>
+    <div class="alert a-info" style="font-size:11px;"><i class="ti ti-info-circle"></i> Al cerrar, la unidad queda habilitada para <strong>Báscula de salida</strong>.</div>
+    <div class="field"><span class="fl">N° de ${desc?'documento de recepción / guía del proveedor':'guía de remisión / documento de despacho'}</span>
+      <input type="text" id="dc-doc" placeholder="${desc?'Ej: guía o ticket de recepción':'Ej: GR-001-000123'}" value="${esc(rv.docNum||'')}"/>
+    </div>
+    <div class="field"><span class="fl">Responsable que cierra</span>
+      <input type="text" id="dc-resp" value="${esc(rv.despachador&&rv.despachador!=='Sin asignar'?rv.despachador:'')}" placeholder="Nombre"/>
+    </div>
+    <div class="field"><span class="fl">Observaciones</span>
+      <textarea id="dc-obs" rows="2" placeholder="Novedades de la ${desc?'descarga':'carga'}, faltantes, daños…"></textarea>
+    </div>
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;margin-top:4px;">
+      <input type="checkbox" id="dc-ok" style="width:auto;margin-top:2px;"/>
+      <span><strong>Documentos ${desc?'recibidos':'entregados al chofer'} y verificados</strong></span>
+    </label>
+    <div id="dc-msg" style="margin-top:8px;"></div>`;
+  document.getElementById('m-desp-actions').innerHTML=`
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-success" onclick="dConfirmarCierre()" style="flex:1;"><i class="ti ti-file-check"></i> Cerrar y pasar a báscula</button>
+    </div>`;
+  abrir('m-desp');
+}
+
+function dConfirmarCierre(){
+  const uid=modalData.uid, rv=reg[uid]; if(!rv) return;
+  if(rv.estado!=='cierre-docs'){ cerrar('m-desp'); return; }
+  const doc=(document.getElementById('dc-doc')?.value||'').trim();
+  const resp=(document.getElementById('dc-resp')?.value||'').trim();
+  const ok=document.getElementById('dc-ok')?.checked;
+  const m=document.getElementById('dc-msg');
+  if(!doc){ m.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Ingrese el número de documento.</div>'; return; }
+  if(!resp){ m.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Ingrese quién cierra.</div>'; return; }
+  if(!ok){ m.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Confirme que los documentos fueron verificados.</div>'; return; }
+  rv.docs=true; rv.docNum=doc; rv.cerradoPor=resp; rv.tsCierre=horaActual();
+  rv.obsCierre=document.getElementById('dc-obs')?.value||'';
+  avanzar(uid,'bascula-salida');
+  audit('Despacho',uid,rv.chofer,rv.placa,'Cierre con documentos · N° '+doc+' · '+resp);
+  cerrar('m-desp');
+  document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
+  renderCargasActivas();
 }
 function renderCargasActivas(){
   const body=document.getElementById('d-activos');if(!body)return;
-  const activos=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&['despacho','cargando'].includes(r.estado));
+  const activos=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&['despacho','cargando','cierre-docs'].includes(r.estado));
   if(!activos.length){body.innerHTML='<tr><td colspan="10" class="ec">Sin cargas activas</td></tr>';return;}
   body.innerHTML=activos.map(rv=>{
     const cr=cronos[rv.uid],cid='ct-'+rv.uid.replace(/[^a-z0-9]/gi,'_');
     const t=cr?fmtCrono(cr.elapsed+(cr.running?Date.now()-cr.start:0)):'—';
     if(cr&&cr.running){clearInterval(cr._int);cr._int=setInterval(()=>{const e=document.getElementById(cid);if(e)e.textContent=fmtCrono(cr.elapsed+Date.now()-cr.start);},1000);}
-    const ac=rv.estado==='despacho'?`<button class="btn btn-success btn-sm" onclick="dIniciar('${rv.uid}')"><i class="ti ti-player-play"></i></button>`:
+    const ac=rv.estado==='cierre-docs'?`<button class="btn btn-warn btn-sm" onclick="dAbrirCierre('${rv.uid}')" title="Cerrar con documentos"><i class="ti ti-file-check"></i> Cerrar</button>`:
+      rv.estado==='despacho'?`<button class="btn btn-success btn-sm" onclick="dIniciar('${rv.uid}')"><i class="ti ti-player-play"></i></button>`:
       `<button class="btn btn-danger btn-sm" onclick="dFinalizar('${rv.uid}')"><i class="ti ti-player-stop"></i></button>`;
     return`<tr>
       <td><span class="mt" style="font-size:10px;">${rv.uid}</span></td>
@@ -2656,7 +2713,8 @@ function bsBuscar(){
   const pw=document.getElementById('bs-peso-wrap');
   bsUID=null; if(pw) pw.style.display='none';
   if(!rv||!rv.peBruto){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado o sin peso de entrada registrado</div>';return;}
-  if(!['bascula-salida','garita-salida'].includes(rv.estado)){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Vehículo aún no completó la carga en despacho</div>';return;}
+  if(rv.estado==='cierre-docs'){el.innerHTML='<div class="alert a-warn"><i class="ti ti-file-alert"></i> Falta el cierre con entrega de documentos en Despacho/Recepción</div>';return;}
+  if(!['bascula-salida','garita-salida'].includes(rv.estado)){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Vehículo aún no completó la '+(esDescarga(rv)?'descarga':'carga')+'</div>';return;}
   if(rv.peSalida){el.innerHTML=`<div class="alert a-info"><i class="ti ti-info-circle"></i> Peso de salida ya registrado: <strong>${rv.peSalida.toLocaleString('es-EC')} kg</strong> a las ${rv.tsBS}</div>`;return;}
   bsUID=id;
   el.innerHTML=`<div class="alert a-ok"><i class="ti ti-check"></i> <strong>${id}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span> · ${rv.detalle}</div>`;
@@ -2768,7 +2826,7 @@ function gsAbrirModal(uid){
       <input type="text" id="gs-prec" placeholder="Ej: PR-001, PR-002"/>
     </div>
     <div class="field"><span class="fl">Guías de remisión</span>
-      <input type="text" id="gs-guias" placeholder="Ej: GR-2025-001"/>
+      <input type="text" id="gs-guias" placeholder="Ej: GR-2025-001" value="${esc(rv.docNum||'')}"/>
     </div>
     <div class="field"><span class="fl">¿Documentos de salida verificados?</span>
       <div style="display:flex;gap:10px;margin-top:4px;">
