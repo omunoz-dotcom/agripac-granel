@@ -162,7 +162,7 @@ input.code{font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em
     <div class="card hidden" id="fin-card">
       <h2 id="fin-titulo">Viaje completado</h2>
       <div id="fin-body"></div>
-      <button class="btn" onclick="cargarRutas()">Volver a mis rutas</button>
+      <button class="btn" id="btn-fin" onclick="cargarRutas()">Volver a mis rutas</button>
     </div>
 
     <!-- Avance -->
@@ -320,7 +320,7 @@ function mostrarViaje(v){
     ladoPrev = p.lado;
     return cab + `<li class="step ${p.hecho?'done':cur?'cur':''}">
       <span class="dot">${p.hecho?'✓':i+1}</span>
-      <span class="step-l">${esc(p.label)}</span>
+      <span class="step-l">${esc(p.label)}${p.interno?' <span class="pill b" style="font-size:10px;padding:1px 6px;">lo registra planta</span>':''}</span>
       <span class="step-t">${p.hora?esc(p.hora.split(' ')[1]):''}</span>
     </li>`;
   }).join('');
@@ -331,12 +331,16 @@ function mostrarViaje(v){
 
   if(!sig){
     pc.classList.add('hidden'); fc.classList.remove('hidden');
-    if(v.tipoDestino==='PLANTA'){
+    const btnFin = document.getElementById('btn-fin');
+    if(v.estado!=='COMPLETADO'){
+      // Va a planta: espera a que garita/báscula cierren el viaje
       document.getElementById('fin-titulo').textContent = 'Llegada registrada';
       document.getElementById('fin-body').innerHTML =
-        `<p class="muted">Presente este código en la garita de planta. Desde aquí continúa el control interno.</p><div id="qr-fin"></div>`;
+        `<p class="muted">Presente este código en la garita de planta. El viaje se cierra cuando planta registre su salida; entonces podrá iniciar el siguiente.</p><div id="qr-fin"></div>`;
       pintarQR('qr-fin', v.idViaje);
+      btnFin.textContent = 'Actualizar estado';
     }else{
+      btnFin.textContent = 'Volver a mis rutas';
       document.getElementById('fin-titulo').textContent = 'Viaje completado ✓';
       const m = v.mermaKg;
       document.getElementById('fin-body').innerHTML = `<div class="kv">
