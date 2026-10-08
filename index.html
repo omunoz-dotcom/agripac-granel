@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AGRIPAC — Sistema Logístico Integral</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<!-- QR generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- QR scanner -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<!-- Firebase compat SDK v9 (no bundler needed) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#f5f4f0;--sf:#fff;--sf2:#f0efe9;--bd:#e0dfd8;--bd2:#c8c7be;
+  --tx:#1a1a18;--tx2:#5a5a54;--tx3:#9a9a92;
+  --gr:#1D9E75;--grb:#e1f5ee;--grt:#085041;
+  --rd:#D85A30;--rdb:#faece7;--rdt:#4A1B0C;
+  --am:#BA7517;--amb:#faeeda;--amt:#412402;
+  --bl:#185FA5;--blb:#e6f1fb;--blt:#042C53;
+  --pu:#6B3FA0;--pub:#f0e9fb;--put:#2E1060;
+  --r:8px;--rl:12px;
+  --font:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1a18;--sf:#242422;--sf2:#2e2e2a;--bd:#3a3a36;--bd2:#4e4e48;
+  --tx:#f0efe9;--tx2:#a0a098;--tx3:#666660;
+  --grb:#04342c;--grt:#9fe1cb;--rdb:#4a1b0c;--rdt:#f5c4b3;
+  --amb:#412402;--amt:#fac775;--blb:#042c53;--blt:#b5d4f4;
+  --pub:#2E1060;--put:#d4b8f8;
+}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);min-height:100vh;}
+
+/* ── HEADER ── */
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;height:52px;
+  position:sticky;top:0;z-index:60;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-badge{background:var(--gr);color:#fff;font-size:11px;font-weight:600;
+  letter-spacing:.06em;padding:3px 8px;border-radius:4px;}
+.logo-name{font-size:15px;font-weight:600;}
+.logo-sub{font-size:12px;color:var(--tx3);margin-left:4px;}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--bd2);display:inline-block;margin-right:4px;}
+.conn-dot.on{background:var(--gr);}
+
+/* ── NAV ── */
+nav{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 1.5rem;
+  display:flex;overflow-x:auto;gap:0;}
+.nb{display:flex;align-items:center;gap:5px;padding:0 12px;height:42px;
+  font-size:12px;font-family:var(--font);color:var(--tx2);background:transparent;
+  border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;
+  transition:all .15s;}
+.nb:hover{color:var(--tx);}
+.nb.active{color:var(--gr);border-bottom-color:var(--gr);font-weight:500;}
+.nb-cnt{background:var(--amb);color:var(--amt);font-size:10px;font-weight:600;
+  padding:1px 5px;border-radius:100px;min-width:16px;text-align:center;}
+.nb-cnt.red{background:var(--rdb);color:var(--rdt);}
+.nb-cnt.green{background:var(--grb);color:var(--grt);}
+
+/* ── LAYOUT ── */
+main{max-width:1400px;margin:0 auto;padding:1.25rem 1.5rem;}
+.sec{display:none;}.sec.active{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem;}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:1rem;}
+@media(max-width:1000px){.g4{grid-template-columns:repeat(2,1fr);}.g6{grid-template-columns:repeat(3,1fr);}.g2,.g3{grid-template-columns:1fr;}}
+
+/* ── METRIC ── */
+.metric{background:var(--sf2);border-radius:var(--r);padding:.9rem 1.1rem;}
+.metric-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:4px;}
+.metric-value{font-size:24px;font-weight:600;font-family:var(--mono);}
+.metric-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
+.pb-wrap{margin-top:5px;height:3px;background:var(--bd);border-radius:2px;overflow:hidden;}
+.pb{height:100%;border-radius:2px;transition:width .4s;}
+
+/* ── CARD ── */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:1.1rem;margin-bottom:1rem;}
+.ct{font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;
+  margin-bottom:.9rem;padding-bottom:.7rem;border-bottom:1px solid var(--bd);flex-wrap:wrap;}
+.ca{margin-left:auto;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);
+  font-weight:500;padding:7px 9px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;}
+td{padding:8px 9px;border-bottom:1px solid var(--bd);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--sf2);}
+.ec{text-align:center;padding:2rem;color:var(--tx3);font-style:italic;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
+  border-radius:100px;font-size:10px;font-weight:500;white-space:nowrap;}
+.b-pend{background:var(--amb);color:var(--amt);}
+.b-garita{background:var(--blb);color:var(--blt);}
+.b-bascula{background:var(--pub);color:var(--put);}
+.b-desp{background:var(--amb);color:var(--amt);}
+.b-carga{background:var(--rdb);color:var(--rdt);}
+.b-salida{background:var(--grb);color:var(--grt);}
+.b-ok{background:var(--grb);color:var(--grt);}
+.b-used{background:var(--sf2);color:var(--tx3);}
+
+/* ── STEP FLOW VISUAL ── */
+.flow-bar{display:flex;align-items:center;gap:0;padding:.75rem 0;overflow-x:auto;margin-bottom:1rem;}
+.fs{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:90px;}
+.fs-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd2);
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  background:var(--sf2);color:var(--tx3);font-weight:600;transition:all .3s;}
+.fs-dot.done{background:var(--gr);border-color:var(--gr);color:#fff;}
+.fs-dot.current{background:var(--bl);border-color:var(--bl);color:#fff;
+  box-shadow:0 0 0 3px var(--blb);}
+.fs-dot.pending{opacity:.4;}
+.fs-label{font-size:10px;color:var(--tx3);text-align:center;line-height:1.3;}
+.fs-label.done{color:var(--gr);}
+.fs-label.current{color:var(--bl);font-weight:500;}
+.fs-line{flex:1;height:2px;background:var(--bd);min-width:8px;flex-shrink:0;transition:background .3s;}
+.fs-line.done{background:var(--gr);}
+
+/* ── BTN ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r);
+  border:1px solid var(--bd);background:transparent;cursor:pointer;font-size:12px;
+  font-family:var(--font);color:var(--tx);transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--sf2);border-color:var(--bd2);}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--tx);color:var(--bg);border-color:var(--tx);}
+.btn-primary:hover{opacity:.82;background:var(--tx);}
+.btn-success{background:var(--grb);color:var(--grt);border-color:var(--gr);}
+.btn-danger{background:var(--rdb);color:var(--rdt);border-color:var(--rd);}
+.btn-warn{background:var(--amb);color:var(--amt);border-color:var(--am);}
+.btn-blue{background:var(--blb);color:var(--blt);border-color:var(--bl);}
+.btn-purple{background:var(--pub);color:var(--put);border-color:var(--pu);}
+.btn-sm{padding:3px 9px;font-size:11px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── INPUT ── */
+input,select,textarea{font-family:var(--font);font-size:12px;background:var(--sf);
+  color:var(--tx);border:1px solid var(--bd);border-radius:var(--r);
+  padding:6px 9px;outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--gr);}
+.field{margin-bottom:9px;}
+.fl{font-size:11px;color:var(--tx2);margin-bottom:3px;display:block;}
+.field input,.field select,.field textarea{width:100%;}
+
+/* ── ALERT ── */
+.alert{padding:9px 12px;border-radius:var(--r);font-size:12px;
+  display:flex;align-items:flex-start;gap:7px;margin-bottom:9px;}
+.a-ok{background:var(--grb);color:var(--grt);}
+.a-warn{background:var(--amb);color:var(--amt);}
+.a-err{background:var(--rdb);color:var(--rdt);}
+.a-info{background:var(--blb);color:var(--blt);}
+
+/* ── TIMELINE ── */
+.tl-item{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--bd);align-items:flex-start;}
+.tl-item:last-child{border-bottom:none;}
+.tl-dot{width:7px;height:7px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.tl-t{font-size:10px;color:var(--tx3);font-family:var(--mono);white-space:nowrap;margin-left:auto;}
+
+/* ── QR ── */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:1rem;background:var(--sf2);border-radius:var(--r);border:1px solid var(--bd);}
+#qr-canvas{background:#fff;padding:6px;border-radius:4px;}
+
+/* ── ANDENES ── */
+.andenes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:.75rem;}
+.anden{border:1px solid var(--bd);border-radius:var(--rl);padding:.75rem;
+  text-align:center;cursor:pointer;transition:all .15s;}
+.anden:hover{border-color:var(--bd2);}
+.anden.libre.sugerido{border-color:var(--bl);background:var(--blb);box-shadow:0 0 0 2px var(--blb);}
+.anden.libre.sugerido .anden-sub{color:var(--blt);}
+.anden.libre   { border-color: var(--gr); background: var(--grb); }
+.anden.cargando{border-color:var(--am);background:var(--amb);animation:pulse 2s ease-in-out infinite;}
+.anden.ocupado{border-color:var(--rd);background:var(--rdb);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+.anden-num{font-size:13px;font-weight:600;font-family:var(--mono);}
+.anden-sub{font-size:10px;margin-top:3px;}
+.anden.libre .anden-sub{color:var(--grt);}
+.anden.cargando .anden-sub{color:var(--amt);}
+.anden.ocupado .anden-sub{color:var(--rdt);}
+
+/* ── CRONO ── */
+.crono{font-family:var(--mono);font-size:32px;font-weight:600;text-align:center;
+  padding:.75rem;background:var(--sf2);border-radius:var(--r);letter-spacing:.08em;}
+.crono.run{color:var(--gr);}
+.crono.stop{color:var(--am);}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:200;
+  align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal{background:var(--sf);border-radius:var(--rl);border:1px solid var(--bd);
+  padding:1.4rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+
+/* ── PASE ── */
+.pase{border:2px dashed var(--bd2);border-radius:var(--rl);padding:1.1rem;
+  text-align:center;background:var(--sf2);}
+.pase-co{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);}
+.pase-title{font-size:15px;font-weight:600;margin:3px 0 10px;}
+.pase-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;
+  border-bottom:1px solid var(--bd);text-align:left;}
+.pase-row:last-of-type{border:none;}
+.pase-row span:first-child{color:var(--tx2);}
+.pase-row span:last-child{font-weight:500;max-width:220px;text-align:right;word-break:break-all;}
+
+/* ── DATE BAR ── */
+.date-bar{display:flex;align-items:center;gap:8px;margin-bottom:1rem;
+  background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:9px 14px;flex-wrap:wrap;}
+.date-nav{padding:3px 8px;border-radius:var(--r);border:1px solid var(--bd);
+  background:transparent;cursor:pointer;font-size:16px;color:var(--tx2);line-height:1;}
+.date-nav:hover{background:var(--sf2);}
+.today-pill{display:inline-flex;align-items:center;gap:3px;background:var(--grb);
+  color:var(--grt);font-size:10px;font-weight:500;padding:2px 8px;border-radius:100px;}
+
+/* ── MONO TAG ── */
+.mt{font-family:var(--mono);font-size:11px;background:var(--sf2);
+  padding:1px 6px;border-radius:4px;word-break:break-all;}
+
+/* ── FOTO ── */
+.foto-area{border:2px dashed var(--bd);border-radius:var(--r);padding:1.5rem;
+  text-align:center;cursor:pointer;transition:border-color .15s;}
+.foto-area:hover{border-color:var(--gr);}
+.foto-preview{width:100%;border-radius:var(--r);margin-top:8px;display:none;}
+
+/* ── DASHBOARD LIVE ── */
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--gr);
+  animation:blink 1.5s ease-in-out infinite;display:inline-block;margin-right:5px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── REPORT CHART ── */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px;}
+.bar{flex:1;background:var(--bl);border-radius:3px 3px 0 0;min-width:12px;
+  opacity:.75;transition:opacity .2s;cursor:pointer;position:relative;}
+.bar:hover{opacity:1;}
+.bar-label{font-size:9px;color:var(--tx3);text-align:center;margin-top:3px;}
+
+/* ── SCANNER MOCK ── */
+.scanner-frame{border:3px solid var(--gr);border-radius:var(--rl);
+  width:180px;height:180px;display:flex;align-items:center;justify-content:center;
+  position:relative;margin:0 auto 10px;}
+.scanner-line{position:absolute;left:10px;right:10px;height:2px;background:var(--gr);
+  opacity:.7;animation:scan 2s linear infinite;}
+@keyframes scan{0%{top:10px}100%{top:160px}}
+.corner{position:absolute;width:20px;height:20px;border-color:var(--gr);border-style:solid;}
+.c-tl{top:-3px;left:-3px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.c-tr{top:-3px;right:-3px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.c-bl{bottom:-3px;left:-3px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.c-br{bottom:-3px;right:-3px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+
+.divider{height:1px;background:var(--bd);margin:.9rem 0;}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:6px;}
+
+/* ── QR POPUP INLINE EN TABLA ── */
+.qr-popup-row{background:var(--sf2);border-bottom:1px solid var(--bd);}
+.qr-popup-inner{display:flex;align-items:flex-start;gap:1.5rem;padding:1rem 1.25rem;flex-wrap:wrap;}
+.qr-popup-img{background:#fff;padding:8px;border-radius:6px;border:1px solid var(--bd);flex-shrink:0;}
+.qr-popup-info{flex:1;min-width:200px;}
+.qr-popup-info .sl{margin-top:6px;}
+
+/* ── SCANNER REAL — multi-módulo ── */
+.scan-btn-group{display:flex;gap:8px;margin-bottom:12px;}
+.scan-btn-group .btn{flex:1;justify-content:center;}
+.scan-mode{border:2px solid var(--bd);border-radius:var(--rl);padding:1rem;margin-bottom:10px;min-height:60px;}
+.scan-mode.active-scan{border-color:var(--gr);}
+.scan-video{width:100%;border-radius:var(--r);display:none;max-height:200px;object-fit:cover;}
+.scan-canvas{display:none;}
+.scan-status{text-align:center;font-size:12px;color:var(--tx3);margin-top:6px;}
+.scan-status.ok{color:var(--grt);}
+.scan-status.err{color:var(--rdt);}
+.scan-overlay{position:relative;}
+.scan-corner{position:absolute;width:18px;height:18px;border-color:var(--gr);border-style:solid;}
+.scan-corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.scan-corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.scan-corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.scan-corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.scan-line-anim{position:absolute;left:8px;right:8px;height:2px;background:var(--gr);opacity:.7;animation:scanline 2s linear infinite;}
+@keyframes scanline{0%{top:8px}100%{top:calc(100% - 8px)}}
+
+/* ── QR texto copiable ── */
+.qr-id-text{font-family:var(--mono);font-size:11px;background:var(--sf2);border:1px solid var(--bd);
+  border-radius:var(--r);padding:6px 10px;text-align:center;word-break:break-all;
+  cursor:pointer;transition:background .15s;user-select:all;position:relative;}
+.qr-id-text:hover{background:var(--bd);}
+.qr-id-text::after{content:'Toca para copiar';display:block;font-size:9px;
+  color:var(--tx3);margin-top:2px;letter-spacing:.03em;}
+.qr-id-text.copied{background:var(--grb);border-color:var(--gr);}
+.qr-id-text.copied::after{content:'¡Copiado!';color:var(--grt);}
+/* ══ LOGIN ══════════════════════════════════════════════ */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+#login-screen.hidden{display:none;}
+.login-box{
+  background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:2rem 2rem 1.75rem;width:100%;max-width:360px;
+}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.75rem;}
+.login-logo .logo-badge{font-size:13px;padding:4px 10px;}
+.login-logo .logo-name{font-size:17px;}
+.login-title{font-size:13px;color:var(--tx2);margin-bottom:1.25rem;}
+.login-error{background:var(--rdb);color:var(--rdt);border-radius:var(--r);
+  padding:9px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.login-field{margin-bottom:12px;}
+.login-field label{font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;}
+.login-field input{width:100%;padding:9px 11px;font-size:13px;
+  border:1px solid var(--bd);border-radius:var(--r);background:var(--sf);
+  color:var(--tx);outline:none;transition:border-color .15s;}
+.login-field input:focus{border-color:var(--gr);}
+.login-btn{width:100%;padding:10px;background:var(--gr);color:#fff;
+  border:none;border-radius:var(--r);font-size:13px;font-weight:500;
+  cursor:pointer;font-family:var(--font);transition:opacity .15s;}
+.login-btn:hover{opacity:.88;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-spinner{display:none;text-align:center;padding:.5rem;font-size:12px;color:var(--tx3);}
+.user-pill{display:flex;align-items:center;gap:8px;font-size:12px;}
+.user-role-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;
+  background:var(--grb);color:var(--grt);}
+/* ── Bloqueo de tabs por rol ── */
+.nb.role-hidden{display:none !important;}
+#app-shell{display:none;}
+#app-shell.visible{display:block;}
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA DE LOGIN ══════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="logo-badge">AG</span>
+      <span class="logo-name">AGRIPAC</span>
+    </div>
+    <div class="login-title">Sistema Logístico Integral — Acceso autorizado</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field">
+      <label for="login-email">Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="usuario@agripac.com"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="login-field">
+      <label for="login-pass">Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')AUTH.login()"/>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="AUTH.login()">
+      <i class="ti ti-login"></i> Ingresar
+    </button>
+    <div class="login-spinner" id="login-spinner"><i class="ti ti-loader"></i> Verificando…</div>
+  </div>
+</div>
+
+<!-- ══ APP PRINCIPAL ═════════════════════════════════════ -->
+<div id="app-shell">
+
+<header>
+  <div class="logo">
+    <span class="logo-badge">AG</span>
+    <span class="logo-name">AGRIPAC</span>
+    <span class="logo-sub">Sistema Logístico Integral</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+      <span class="conn-dot" id="csv-dot"></span>
+      <span id="csv-status" style="color:var(--tx3);">Conectando…</span>
+    </div>
+    <div style="text-align:right;">
+      <div id="clock" style="font-family:var(--mono);font-size:13px;font-weight:500;"></div>
+      <div id="fhdr" style="font-size:10px;color:var(--tx3);"></div>
+    </div>
+    <button class="btn btn-sm" onclick="cargarCSV()" title="Actualizar datos"><i class="ti ti-refresh"></i> <span id="countdown"></span></button>
+    <div class="user-pill" id="user-pill" style="display:none;">
+      <span id="user-name" style="color:var(--tx2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <span class="user-role-badge" id="user-role-badge">—</span>
+      <button class="btn btn-sm btn-danger" onclick="AUTH.logout()" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="nb active" onclick="showTab('dashboard')" id="tab-dashboard"><i class="ti ti-dashboard"></i> Dashboard</button>
+  <button class="nb" onclick="showTab('planificacion')" id="tab-planificacion"><i class="ti ti-calendar"></i> Planificación</button>
+  <button class="nb" onclick="showTab('granel')" id="tab-granel"><i class="ti ti-truck-delivery"></i> Granel</button>
+  <button class="nb" onclick="showTab('qr')" id="tab-qr"><i class="ti ti-qrcode"></i> QR <span class="nb-cnt" id="nb-qr">0</span></button>
+  <button class="nb" onclick="showTab('garita-e')" id="tab-garita-e"><i class="ti ti-login"></i> Garita Entrada <span class="nb-cnt" id="nb-ge">0</span></button>
+  <button class="nb" onclick="showTab('bascula-e')" id="tab-bascula-e"><i class="ti ti-weight"></i> Báscula Entrada <span class="nb-cnt" id="nb-be">0</span></button>
+  <button class="nb" onclick="showTab('despacho')" id="tab-despacho"><i class="ti ti-building-warehouse"></i> Despacho <span class="nb-cnt red" id="nb-d">0</span></button>
+  <button class="nb" onclick="showTab('bascula-s')" id="tab-bascula-s"><i class="ti ti-weight"></i> Báscula Salida <span class="nb-cnt" id="nb-bs">0</span></button>
+  <button class="nb" onclick="showTab('garita-s')" id="tab-garita-s"><i class="ti ti-logout"></i> Garita Salida <span class="nb-cnt green" id="nb-gs">0</span></button>
+  <button class="nb" onclick="showTab('reportes')" id="tab-reportes"><i class="ti ti-chart-bar"></i> Reportes</button>
+  <button class="nb" onclick="showTab('auditoria')" id="tab-auditoria"><i class="ti ti-shield"></i> Auditoría</button>
+</nav>
+
+<main>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="sec active" id="sec-dashboard">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+    <span class="live-dot"></span>
+    <span style="font-size:12px;color:var(--tx2);">Tiempo real</span>
+    <span style="font-size:11px;color:var(--tx3);margin-left:4px;" id="dash-ts"></span>
+  </div>
+  <div class="g6">
+    <div class="metric"><div class="metric-label">Programados hoy</div><div class="metric-value" id="d-total">—</div><div class="metric-sub">vehículos</div></div>
+    <div class="metric"><div class="metric-label">Pendientes</div><div class="metric-value" id="d-pend" style="color:var(--tx3);">—</div><div class="metric-sub">sin ingresar</div></div>
+    <div class="metric"><div class="metric-label">En planta</div><div class="metric-value" id="d-dentro" style="color:var(--am);">—</div><div class="metric-sub">activos<div class="pb-wrap"><div class="pb" id="pb-dentro" style="width:0%;background:var(--am)"></div></div></div></div>
+    <div class="metric"><div class="metric-label">Cargando</div><div class="metric-value" id="d-cargando" style="color:var(--rd);">—</div><div class="metric-sub">operación activa<div class="pb-wrap"><div class="pb" id="pb-carg" style="width:0%;background:var(--rd)"></div></div></div></div>
+    <div class="metric"><div class="metric-label">Completados</div><div class="metric-value" id="d-done" style="color:var(--gr);">—</div><div class="metric-sub">salieron hoy<div class="pb-wrap"><div class="pb" id="pb-done" style="width:0%;background:var(--gr)"></div></div></div></div>
+    <div class="metric"><div class="metric-label">Peso neto total</div><div class="metric-value" id="d-neto" style="font-size:18px;">—</div><div class="metric-sub">kg cargados</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-building-warehouse"></i> Estado de andenes</div>
+      <div class="andenes-grid" id="dash-andenes"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-activity"></i> Actividad reciente</div>
+      <div id="dash-tl"><div class="tl-item"><div class="tl-dot" style="background:var(--bd2)"></div><div style="font-size:12px;color:var(--tx3);">Sin actividad</div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-alert-triangle"></i> Alertas operativas <span id="alertas-cnt" class="badge b-pend" style="margin-left:4px;">0</span></div>
+    <div id="alertas-body"><div style="font-size:12px;color:var(--tx3);text-align:center;padding:1rem;">Sin alertas activas</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-list-details"></i> Vehículos en planta ahora</div>
+    <div class="tw"><table>
+      <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Detalle</th><th>Paso actual</th><th>Andén</th><th>Tiempo en planta</th></tr></thead>
+      <tbody id="dash-en-planta"><tr><td colspan="7" class="ec">Sin vehículos en planta</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ PLANIFICACIÓN ═══ -->
+<div class="sec" id="sec-planificacion">
+  <div class="date-bar">
+    <label style="font-size:12px;color:var(--tx2);"><i class="ti ti-calendar-event" style="vertical-align:-2px;"></i> Fecha:</label>
+    <button class="date-nav" onclick="cambiarDia(-1)">&#8249;</button>
+    <input type="date" id="fecha-filtro" onchange="aplicarFiltro()" style="font-family:var(--mono);font-size:12px;"/>
+    <button class="date-nav" onclick="cambiarDia(1)">&#8250;</button>
+    <button class="btn btn-sm" onclick="irHoy()"><i class="ti ti-home"></i> Hoy</button>
+    <span id="hoy-pill" class="today-pill" style="display:none;"><i class="ti ti-circle-check"></i> Hoy</span>
+    <span id="f-count" style="font-size:12px;color:var(--tx3);margin-left:auto;"></span>
+  </div>
+
+  <div class="g4">
+    <div class="metric"><div class="metric-label">Programados</div><div class="metric-value" id="m-tot">—</div><div class="metric-sub">vehículos</div></div>
+    <div class="metric"><div class="metric-label">En proceso</div><div class="metric-value" id="m-proc" style="color:var(--am);">—</div><div class="metric-sub">en planta</div></div>
+    <div class="metric"><div class="metric-label">Completados</div><div class="metric-value" id="m-done" style="color:var(--gr);">—</div><div class="metric-sub">finalizados</div></div>
+    <div class="metric"><div class="metric-label">Pendientes</div><div class="metric-value" id="m-pend" style="color:var(--tx3);">—</div><div class="metric-sub">sin iniciar</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-list-details"></i> Planificación
+      <div class="ca">
+        <input type="search" id="sp" placeholder="Buscar ID, chofer, placa…" oninput="renderPlan()" style="width:190px;"/>
+        <button class="btn btn-sm" onclick="cargarCSV()"><i class="ti ti-refresh"></i></button>
+        <button class="btn btn-sm btn-purple" onclick="generarTodosQR()"><i class="ti ti-qrcode"></i> Generar QRs</button>
+      </div>
+    </div>
+    <div id="fuente" style="font-size:10px;color:var(--tx3);margin-bottom:7px;"></div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>ID Único</th><th>Área Carga</th><th>Área Descarga</th><th>Detalle</th>
+        <th>Tipo</th><th>Chofer</th><th>Placa</th><th>Hora</th><th>Aprobación</th>
+        <th>Código QR</th><th>Estado</th><th>Acción</th>
+      </tr></thead>
+      <tbody id="plan-body"><tr><td colspan="12" class="ec"><i class="ti ti-loader"></i> Cargando…</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ QR ═══ -->
+<div class="sec" id="sec-qr">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-qrcode"></i> Generar QR individual</div>
+      <div class="field"><span class="fl">ID Único</span>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="qr-id" placeholder="ID-UNICO" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')generarQR()"/>
+          <button class="btn btn-primary" onclick="generarQR()"><i class="ti ti-qrcode"></i> Generar</button>
+        </div>
+      </div>
+      <div id="qr-info" style="margin-bottom:10px;"></div>
+      <div class="qr-wrap" style="display:none;" id="qr-display">
+        <div id="qr-canvas"></div>
+        <div id="qr-data" style="font-size:11px;color:var(--tx2);text-align:center;max-width:200px;"></div>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <button class="btn btn-success btn-sm" onclick="enviarWhatsApp()"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+          <button class="btn btn-sm" onclick="descargarQR()"><i class="ti ti-download"></i> Descargar</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-list"></i> QRs generados hoy <span id="qr-count" class="badge b-ok">0</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Estado QR</th><th>Generado</th><th>Enviado</th></tr></thead>
+        <tbody id="qr-tabla"><tr><td colspan="6" class="ec">Sin QRs generados</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GARITA ENTRADA ═══ -->
+<div class="sec" id="sec-garita-e">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-scan"></i> Control de acceso — Garita Entrada</div>
+      <div class="scan-btn-group">
+        <button class="btn btn-primary" id="ge-btn-cam" onclick="activarModo('ge','cam')">
+          <i class="ti ti-camera"></i> Escanear QR
+        </button>
+        <button class="btn" id="ge-btn-manual" onclick="activarModo('ge','manual')">
+          <i class="ti ti-keyboard"></i> Ingreso manual
+        </button>
+      </div>
+      <div class="scan-mode" id="ge-modo-cam" style="display:none;">
+        <div class="scan-overlay" style="position:relative;background:#000;border-radius:var(--r);overflow:hidden;max-height:200px;">
+          <video class="scan-video" id="ge-video" autoplay playsinline muted></video>
+          <canvas class="scan-canvas" id="ge-canvas"></canvas>
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line-anim"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="ge-cam-status">Iniciando cámara…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+          <button class="btn btn-sm" onclick="detenerCamara('ge')"><i class="ti ti-player-stop"></i> Detener</button>
+          <button class="btn btn-sm" onclick="iniciarCamara('ge')"><i class="ti ti-refresh"></i> Reiniciar</button>
+        </div>
+      </div>
+      <div class="scan-mode" id="ge-modo-manual" style="display:none;">
+        <div class="sl" style="margin-bottom:8px;"><i class="ti ti-keyboard"></i> Ingreso manual por ID o placa</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="ge-id" placeholder="ID-UNICO o PLACA" style="flex:1;text-transform:uppercase;font-size:13px;"
+            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')geSearch()"/>
+          <button class="btn btn-primary" onclick="geSearch()"><i class="ti ti-search"></i> Buscar</button>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);">ID-UNICO completo o últimos dígitos de la placa</div>
+      </div>
+      <div id="ge-result" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-clock"></i> Pendientes de ingreso hoy</div>
+      <div class="tw"><table>
+        <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Detalle</th><th>Hora</th><th>QR</th><th></th></tr></thead>
+        <tbody id="ge-pend"><tr><td colspan="7" class="ec">Sin pendientes</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><i class="ti ti-activity"></i> Actividad garita entrada</div>
+    <div id="ge-tl"><div class="tl-item"><div class="tl-dot" style="background:var(--bd2)"></div><div style="font-size:12px;color:var(--tx3);">Sin actividad</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ BÁSCULA ENTRADA ═══ -->
+<div class="sec" id="sec-bascula-e">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-weight"></i> Báscula de entrada — Registro de peso</div>
+      <div class="scan-btn-group">
+        <button class="btn btn-primary" id="be-btn-cam" onclick="activarModo('be','cam')">
+          <i class="ti ti-camera"></i> Escanear QR
+        </button>
+        <button class="btn" id="be-btn-manual" onclick="activarModo('be','manual')">
+          <i class="ti ti-keyboard"></i> Ingreso manual
+        </button>
+      </div>
+      <div class="scan-mode" id="be-modo-cam" style="display:none;">
+        <div class="scan-overlay" style="position:relative;background:#000;border-radius:var(--r);overflow:hidden;max-height:200px;">
+          <video class="scan-video" id="be-video" autoplay playsinline muted></video>
+          <canvas class="scan-canvas" id="be-canvas"></canvas>
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line-anim"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="be-cam-status">Iniciando cámara…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+          <button class="btn btn-sm" onclick="detenerCamara('be')"><i class="ti ti-player-stop"></i> Detener</button>
+          <button class="btn btn-sm" onclick="iniciarCamara('be')"><i class="ti ti-refresh"></i> Reiniciar</button>
+        </div>
+      </div>
+      <div class="scan-mode" id="be-modo-manual" style="display:none;">
+        <div class="sl" style="margin-bottom:8px;"><i class="ti ti-keyboard"></i> Ingreso manual</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="be-id" placeholder="ID-UNICO" style="flex:1;text-transform:uppercase;"
+            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')beBuscar()"/>
+          <button class="btn btn-primary" onclick="beBuscar()"><i class="ti ti-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="be-info" style="margin-top:10px;"></div>
+      <div id="be-peso-wrap" style="display:none;">
+        <div class="field" style="margin-top:10px;"><span class="fl">Peso bruto entrada (kg)</span>
+          <input type="number" id="be-peso" placeholder="0" min="0" step="1" oninput="beDisplay()"/>
+        </div>
+        <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:3px;">PESO INGRESADO</div>
+          <div style="font-size:26px;font-weight:600;font-family:var(--mono);" id="be-display">— kg</div>
+        </div>
+        <button class="btn btn-primary" onclick="beRegistrar()" style="width:100%;"><i class="ti ti-device-floppy"></i> Registrar peso entrada</button>
+      </div>
+      <div id="be-msg" style="margin-top:8px;display:none;"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-list"></i> Pesos de entrada hoy</div>
+      <div class="tw"><table>
+        <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Peso entrada</th><th>Hora</th></tr></thead>
+        <tbody id="be-tabla"><tr><td colspan="5" class="ec">Sin registros</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DESPACHO ═══ -->
+<div class="sec" id="sec-despacho">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-building-warehouse"></i> Despacho — Buscar orden por QR</div>
+      <div class="scan-btn-group">
+        <button class="btn btn-primary" id="d-btn-cam" onclick="activarModo('d','cam')">
+          <i class="ti ti-camera"></i> Escanear QR
+        </button>
+        <button class="btn" id="d-btn-manual" onclick="activarModo('d','manual')">
+          <i class="ti ti-keyboard"></i> Ingreso manual
+        </button>
+      </div>
+      <div class="scan-mode" id="d-modo-cam" style="display:none;">
+        <div class="scan-overlay" style="position:relative;background:#000;border-radius:var(--r);overflow:hidden;max-height:200px;">
+          <video class="scan-video" id="d-video" autoplay playsinline muted></video>
+          <canvas class="scan-canvas" id="d-canvas"></canvas>
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line-anim"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="d-cam-status">Iniciando cámara…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+          <button class="btn btn-sm" onclick="detenerCamara('d')"><i class="ti ti-player-stop"></i> Detener</button>
+          <button class="btn btn-sm" onclick="iniciarCamara('d')"><i class="ti ti-refresh"></i> Reiniciar</button>
+        </div>
+      </div>
+      <div class="scan-mode" id="d-modo-manual" style="display:none;">
+        <div class="sl" style="margin-bottom:8px;"><i class="ti ti-keyboard"></i> Ingreso manual</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="d-id" placeholder="ID-UNICO" style="flex:1;text-transform:uppercase;"
+            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')dBuscar()"/>
+          <button class="btn btn-primary" onclick="dBuscar()"><i class="ti ti-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="d-info" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-building-warehouse"></i> Andenes
+        <div class="ca"><button class="btn btn-sm" onclick="agregarAnden()"><i class="ti ti-plus"></i></button></div>
+      </div>
+      <div class="andenes-grid" id="andenes-grid"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><i class="ti ti-truck-loading"></i> Cargas en proceso</div>
+    <div class="tw"><table>
+      <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Detalle</th><th>Andén</th><th>Despachador</th><th>Docs</th><th>Tiempo carga</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="d-activos"><tr><td colspan="10" class="ec">Sin cargas activas</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ BÁSCULA SALIDA ═══ -->
+<div class="sec" id="sec-bascula-s">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-weight"></i> Báscula de salida — Registro de peso</div>
+      <div class="scan-btn-group">
+        <button class="btn btn-primary" id="bs-btn-cam" onclick="activarModo('bs','cam')">
+          <i class="ti ti-camera"></i> Escanear QR
+        </button>
+        <button class="btn" id="bs-btn-manual" onclick="activarModo('bs','manual')">
+          <i class="ti ti-keyboard"></i> Ingreso manual
+        </button>
+      </div>
+      <div class="scan-mode" id="bs-modo-cam" style="display:none;">
+        <div class="scan-overlay" style="position:relative;background:#000;border-radius:var(--r);overflow:hidden;max-height:200px;">
+          <video class="scan-video" id="bs-video" autoplay playsinline muted></video>
+          <canvas class="scan-canvas" id="bs-canvas"></canvas>
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line-anim"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="bs-cam-status">Iniciando cámara…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+          <button class="btn btn-sm" onclick="detenerCamara('bs')"><i class="ti ti-player-stop"></i> Detener</button>
+          <button class="btn btn-sm" onclick="iniciarCamara('bs')"><i class="ti ti-refresh"></i> Reiniciar</button>
+        </div>
+      </div>
+      <div class="scan-mode" id="bs-modo-manual" style="display:none;">
+        <div class="sl" style="margin-bottom:8px;"><i class="ti ti-keyboard"></i> Ingreso manual</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="bs-id" placeholder="ID-UNICO" style="flex:1;text-transform:uppercase;"
+            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')bsBuscar()"/>
+          <button class="btn btn-primary" onclick="bsBuscar()"><i class="ti ti-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="bs-info" style="margin-top:10px;"></div>
+      <div id="bs-peso-wrap" style="display:none;">
+        <div class="field" style="margin-top:10px;"><span class="fl">Peso tara salida (kg)</span>
+          <input type="number" id="bs-peso" placeholder="0" min="0" step="1" oninput="bsCalc()"/>
+        </div>
+        <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">ENTRADA</div><div style="font-size:16px;font-weight:600;font-family:var(--mono);" id="bs-ent">—</div></div>
+            <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">SALIDA</div><div style="font-size:16px;font-weight:600;font-family:var(--mono);" id="bs-sal">—</div></div>
+            <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">NETO</div><div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--gr);" id="bs-net">—</div></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="bsRegistrar()" style="width:100%;"><i class="ti ti-device-floppy"></i> Registrar peso salida</button>
+      </div>
+      <div id="bs-msg" style="margin-top:8px;display:none;"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-list"></i> Pesos registrados</div>
+      <div class="tw"><table>
+        <thead><tr><th>ID Único</th><th>Placa</th><th>Entrada</th><th>Salida</th><th>Neto</th><th>Hora</th></tr></thead>
+        <tbody id="bs-tabla"><tr><td colspan="6" class="ec">Sin registros</td></tr></tbody>
+      </table></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:var(--tx2);">Total neto acumulado</span>
+        <span style="font-weight:600;font-family:var(--mono);" id="bs-total">0 kg</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GARITA SALIDA ═══ -->
+<div class="sec" id="sec-garita-s">
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-shield-check"></i> Garita Salida — Autorización</div>
+      <!-- SCANNER idéntico al de garita entrada, prefijo 'gs' -->
+      <div class="scan-btn-group">
+        <button class="btn btn-primary" id="gs-btn-cam" onclick="activarModo('gs','cam')">
+          <i class="ti ti-camera"></i> Escanear QR
+        </button>
+        <button class="btn" id="gs-btn-manual" onclick="activarModo('gs','manual')">
+          <i class="ti ti-keyboard"></i> Ingreso manual
+        </button>
+      </div>
+      <div class="scan-mode" id="gs-modo-cam" style="display:none;">
+        <div class="scan-overlay" style="position:relative;background:#000;border-radius:var(--r);overflow:hidden;max-height:200px;">
+          <video class="scan-video" id="gs-video" autoplay playsinline muted></video>
+          <canvas class="scan-canvas" id="gs-canvas"></canvas>
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line-anim"></div>
+          </div>
+        </div>
+        <div class="scan-status" id="gs-cam-status">Iniciando cámara…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+          <button class="btn btn-sm" onclick="detenerCamara('gs')"><i class="ti ti-player-stop"></i> Detener</button>
+          <button class="btn btn-sm" onclick="iniciarCamara('gs')"><i class="ti ti-refresh"></i> Reiniciar</button>
+        </div>
+      </div>
+      <div class="scan-mode" id="gs-modo-manual" style="display:none;">
+        <div class="sl" style="margin-bottom:8px;"><i class="ti ti-keyboard"></i> Ingreso manual</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="gs-id" placeholder="ID-UNICO" style="flex:1;text-transform:uppercase;"
+            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')gsBuscar()"/>
+          <button class="btn btn-primary" onclick="gsBuscar()"><i class="ti ti-search"></i> Buscar</button>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);">ID-UNICO completo — debe tener peso de salida registrado</div>
+      </div>
+      <div id="gs-info" style="margin-top:10px;"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-activity"></i> Actividad garita salida</div>
+      <div id="gs-tl"><div class="tl-item"><div class="tl-dot" style="background:var(--bd2)"></div><div style="font-size:12px;color:var(--tx3);">Sin actividad</div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><i class="ti ti-checks"></i> Salidas autorizadas hoy</div>
+    <div class="tw"><table>
+      <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Precintos</th><th>Guías</th><th>Neto</th><th>Tiempo total</th><th>Hora salida</th><th>Autorizado</th></tr></thead>
+      <tbody id="gs-tabla"><tr><td colspan="9" class="ec">Sin salidas</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ GRANEL ═══ -->
+<div class="sec" id="sec-granel">
+  <div class="date-bar">
+    <label style="font-size:12px;color:var(--tx2);"><i class="ti ti-calendar-event" style="vertical-align:-2px;"></i> Fecha de ruta:</label>
+    <input type="date" id="gr-desde" style="font-family:var(--mono);font-size:12px;"/>
+    <span style="font-size:12px;color:var(--tx3);">a</span>
+    <input type="date" id="gr-hasta" style="font-family:var(--mono);font-size:12px;"/>
+    <button class="btn btn-sm btn-primary" onclick="cargarGranel()"><i class="ti ti-refresh"></i> Actualizar</button>
+    <button class="btn btn-sm" onclick="grRango(0)">Hoy</button>
+    <button class="btn btn-sm" onclick="grRango(6)">7 días</button>
+    <span id="gr-sync"></span>
+    <span id="gr-ts" style="font-size:11px;color:var(--tx3);margin-left:auto;"></span>
+  </div>
+  <div id="gr-msg"></div>
+
+  <div class="g6">
+    <div class="metric"><div class="metric-label">Viajes completados</div><div class="metric-value" id="gr-k-comp" style="color:var(--gr);">—</div><div class="metric-sub" id="gr-k-comp-s">de — autorizados</div></div>
+    <div class="metric"><div class="metric-label">En curso</div><div class="metric-value" id="gr-k-curso" style="color:var(--am);">—</div><div class="metric-sub">abiertos / en tránsito / en destino</div></div>
+    <div class="metric"><div class="metric-label">TON recibidas</div><div class="metric-value" id="gr-k-ton" style="font-size:20px;">—</div><div class="metric-sub" id="gr-k-ton-s">vs — estimadas</div></div>
+    <div class="metric"><div class="metric-label">TON pendientes (est.)</div><div class="metric-value" id="gr-k-pend" style="font-size:20px;">—</div><div class="metric-sub">viajes que faltan</div></div>
+    <div class="metric"><div class="metric-label">Merma total</div><div class="metric-value" id="gr-k-merma" style="font-size:20px;">—</div><div class="metric-sub" id="gr-k-merma-s">—</div></div>
+    <div class="metric"><div class="metric-label">Tránsito promedio</div><div class="metric-value" id="gr-k-trans" style="font-size:20px;">—</div><div class="metric-sub">salida origen → llegada destino</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-building-warehouse"></i> Por destino <span style="font-size:11px;color:var(--tx3);font-weight:400;">· informativo, las toneladas no bloquean</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>Destino</th><th>Tipo</th><th>Cupo TON</th><th>Viajes aut.</th><th>Completados</th><th>En curso</th><th>TON estimadas</th><th>TON recibidas</th><th>TON pendientes</th><th>Merma kg</th></tr></thead>
+      <tbody id="gr-dest"><tr><td colspan="10" class="ec">Sin datos</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-route"></i> Por ruta</div>
+    <div class="tw"><table>
+      <thead><tr><th>Ruta</th><th>Fecha</th><th>Conductor</th><th>Placa</th><th>Origen → Destino</th><th>Producto</th><th>Buque / Lote</th><th>Viajes</th><th>TON est.</th><th>TON reales</th><th>Merma kg</th><th>Estado</th></tr></thead>
+      <tbody id="gr-rutas"><tr><td colspan="12" class="ec">Sin datos</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><i class="ti ti-list-details"></i> Movimientos por viaje
+      <div class="ca">
+        <input type="search" id="gr-q" placeholder="Buscar conductor, placa, ID…" oninput="renderGranel()" style="width:180px;"/>
+        <select id="gr-est" onchange="renderGranel()">
+          <option value="">Todos los estados</option><option>ABIERTO</option><option>EN TRANSITO</option>
+          <option>EN DESTINO</option><option>COMPLETADO</option><option>ANULADO</option>
+        </select>
+        <button class="btn btn-sm btn-success" onclick="exportarGranel()"><i class="ti ti-download"></i> CSV</button>
+      </div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>ID viaje</th><th>Fecha</th><th>Conductor</th><th>Placa</th><th>Ruta</th><th>Viaje</th><th>TON est.</th>
+        <th>Neto origen</th><th>Neto destino</th><th>Merma kg</th><th>Merma %</th>
+        <th>Llegada origen</th><th>Salida origen</th><th>Llegada destino</th><th>Tránsito</th><th>Salida destino</th><th>Estado</th><th>Tickets</th></tr></thead>
+      <tbody id="gr-viajes"><tr><td colspan="18" class="ec">Sin datos</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ REPORTES ═══ -->
+<div class="sec" id="sec-reportes">
+  <div class="g4">
+    <div class="metric"><div class="metric-label">Tiempo prom. en planta</div><div class="metric-value" id="r-tprom">—</div><div class="metric-sub">minutos</div></div>
+    <div class="metric"><div class="metric-label">Tiempo prom. carga</div><div class="metric-value" id="r-tcarga">—</div><div class="metric-sub">minutos</div></div>
+    <div class="metric"><div class="metric-label">Productividad andenes</div><div class="metric-value" id="r-andprod">—</div><div class="metric-sub">op/andén hoy</div></div>
+    <div class="metric"><div class="metric-label">Peso total cargado</div><div class="metric-value" id="r-pesotot" style="font-size:18px;">—</div><div class="metric-sub">kg</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-chart-bar"></i> Operaciones por hora</div>
+      <div class="bar-chart" id="r-barchart"></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);padding:0 4px;margin-top:2px;">
+        <span>6am</span><span>9am</span><span>12pm</span><span>3pm</span><span>6pm</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-users"></i> Productividad por despachador</div>
+      <div class="tw"><table>
+        <thead><tr><th>Despachador</th><th>Operaciones</th><th>T. prom.</th><th>Kg totales</th></tr></thead>
+        <tbody id="r-desp-tabla"><tr><td colspan="4" class="ec">Sin datos</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><i class="ti ti-truck"></i> Historial por conductor</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="text" id="r-cond-filter" placeholder="Buscar conductor…" oninput="renderRptConductor()" style="flex:1;"/>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Chofer</th><th>Placa</th><th>Viajes</th><th>Último ingreso</th><th>Kg totales</th></tr></thead>
+        <tbody id="r-cond-tabla"><tr><td colspan="5" class="ec">Sin datos</td></tr></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-download"></i> Exportar reportes</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-success" onclick="exportarCSV('historial')"><i class="ti ti-download"></i> Historial completo CSV</button>
+        <button class="btn" onclick="exportarCSV('pesos')"><i class="ti ti-download"></i> Reporte de pesos CSV</button>
+        <button class="btn" onclick="exportarCSV('conductores')"><i class="ti ti-download"></i> Reporte por conductor</button>
+        <button class="btn" onclick="exportarCSV('andenes')"><i class="ti ti-download"></i> Productividad por andén</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUDITORÍA ═══ -->
+<div class="sec" id="sec-auditoria">
+  <div class="card">
+    <div class="ct"><i class="ti ti-shield"></i> Registro de auditoría completo
+      <div class="ca">
+        <input type="search" id="aud-q" placeholder="Buscar…" oninput="renderAud()" style="width:160px;"/>
+        <button class="btn btn-sm" onclick="exportarCSV('auditoria')"><i class="ti ti-download"></i> Exportar</button>
+      </div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Timestamp</th><th>Módulo</th><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Evento</th><th>Detalle</th><th>Usuario</th></tr></thead>
+      <tbody id="aud-body"><tr><td colspan="8" class="ec">Sin registros</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══ MODALES ═══ -->
+
+<!-- Modal ingreso garita -->
+<div class="overlay" id="m-ge">
+  <div class="modal">
+    <div class="mh"><span style="font-size:14px;font-weight:500;"><i class="ti ti-login"></i> Confirmar ingreso</span><button class="btn btn-sm" onclick="cerrar('m-ge')"><i class="ti ti-x"></i></button></div>
+    <div id="m-ge-body"></div>
+    <div style="display:flex;gap:6px;margin-top:1rem;">
+      <button class="btn btn-success" onclick="geConfirmar()" style="flex:1;"><i class="ti ti-check"></i> Autorizar ingreso</button>
+      <button class="btn" onclick="cerrar('m-ge')" style="flex:1;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal despacho config -->
+<div class="overlay" id="m-desp">
+  <div class="modal">
+    <div class="mh"><span style="font-size:14px;font-weight:500;"><i class="ti ti-building-warehouse"></i> Configurar despacho</span><button class="btn btn-sm" onclick="cerrar('m-desp')"><i class="ti ti-x"></i></button></div>
+    <div id="m-desp-body"></div>
+    <div id="m-desp-actions" style="margin-top:1rem;"></div>
+  </div>
+</div>
+
+<!-- Modal garita salida -->
+<div class="overlay" id="m-gs">
+  <div class="modal">
+    <div class="mh"><span style="font-size:14px;font-weight:500;"><i class="ti ti-logout"></i> Autorizar salida</span><button class="btn btn-sm" onclick="cerrar('m-gs')"><i class="ti ti-x"></i></button></div>
+    <div id="m-gs-body"></div>
+    <div style="display:flex;gap:6px;margin-top:1rem;">
+      <button class="btn btn-success" onclick="gsConfirmar()" style="flex:1;"><i class="ti ti-shield-check"></i> Autorizar salida</button>
+      <button class="btn" onclick="cerrar('m-gs')" style="flex:1;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pase QR -->
+<div class="overlay" id="m-pase">
+  <div class="modal" style="max-width:360px;">
+    <div class="mh"><span style="font-size:14px;font-weight:500;">Pase de ingreso</span><button class="btn btn-sm" onclick="cerrar('m-pase')"><i class="ti ti-x"></i></button></div>
+    <div class="pase">
+      <div class="pase-co">AGRIPAC S.A. — Control de Acceso</div>
+      <div class="pase-title">Pase de Ingreso</div>
+      <div id="m-pase-qr" style="display:flex;justify-content:center;margin-bottom:10px;"><div style="background:#fff;padding:6px;border-radius:4px;" id="pase-qr-canvas"></div></div>
+      <div id="pase-rows"></div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:8px;">Válido únicamente el día de hoy · Un solo uso</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:1rem;">
+      <button class="btn btn-success" onclick="paseWA()" style="flex:1;"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+      <button class="btn" onclick="cerrar('m-pase')" style="flex:1;">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// FIREBASE — CONFIGURACIÓN E INICIALIZACIÓN
+// ══════════════════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey:            "AIzaSyCsEUF1hp2tqBYK9KmdCvhOASVewVm5rWE",
+  authDomain:        "control-de-ingresos-c70ad.firebaseapp.com",
+  projectId:         "control-de-ingresos-c70ad",
+  storageBucket:     "control-de-ingresos-c70ad.firebasestorage.app",
+  messagingSenderId: "153584737534",
+  appId:             "1:153584737534:web:91cdd93c20b79655a719af",
+  measurementId:     "G-MQP7ZBVCFP"
+};
+
+firebase.initializeApp(FB_CONFIG);
+const fbAuth = firebase.auth();
+const fbDB   = firebase.firestore();
+
+// ══════════════════════════════════════════════════════════
+// MÓDULO AUTH — Login / Logout / Roles
+// ══════════════════════════════════════════════════════════
+// Tabs disponibles en el sistema
+const ALL_TABS = ['dashboard','planificacion','granel','qr','garita-e','bascula-e','despacho','bascula-s','garita-s','reportes','auditoria'];
+
+// Nombres legibles por tab (para el badge de rol)
+const TAB_NOMBRES = {
+  'dashboard':    'Dashboard',
+  'planificacion':'Planificación',
+  'granel':       'Granel',
+  'qr':           'QR',
+  'garita-e':     'Garita Entrada',
+  'garita-s':     'Garita Salida',
+  'bascula-e':    'Báscula Entrada',
+  'bascula-s':    'Báscula Salida',
+  'despacho':     'Despacho',
+  'reportes':     'Reportes',
+  'auditoria':    'Auditoría',
+};
+
+// Presets opcionales — se usan si el usuario NO tiene campo 'tabs' en Firestore
+// Si el usuario tiene campo 'tabs' (array), esos tienen prioridad total
+const ROLE_PRESETS = {
+  admin:         null,   // null = acceso total
+  garita:        ['dashboard','garita-e','garita-s'],
+  bascula:       ['dashboard','bascula-e','bascula-s'],
+  planificacion: ['dashboard','planificacion','granel'],
+  despacho:      ['dashboard','planificacion','despacho'],
+};
+
+let currentUser = null;  // { uid, email, nombre, rol, tabs }
+
+const AUTH = {
+  async login(){
+    const email = document.getElementById('login-email')?.value.trim();
+    const pass  = document.getElementById('login-pass')?.value;
+    const errEl = document.getElementById('login-error');
+    const btn   = document.getElementById('login-btn');
+    const spin  = document.getElementById('login-spinner');
+    errEl.style.display='none';
+    if(!email||!pass){ errEl.textContent='Complete correo y contraseña.'; errEl.style.display='block'; return; }
+    btn.disabled=true; spin.style.display='block';
+    try{
+      await fbAuth.signInWithEmailAndPassword(email, pass);
+      // onAuthStateChanged se encarga del resto
+    }catch(e){
+      const msgs={
+        'auth/user-not-found':'Usuario no encontrado.',
+        'auth/wrong-password':'Contraseña incorrecta.',
+        'auth/invalid-email':'Correo no válido.',
+        'auth/too-many-requests':'Demasiados intentos. Espere unos minutos.',
+      };
+      errEl.textContent=msgs[e.code]||'Error: '+e.message;
+      errEl.style.display='block';
+      btn.disabled=false; spin.style.display='none';
+    }
+  },
+
+  async logout(){
+    if(!confirm('¿Cerrar sesión?')) return;
+    detenerTodosScanners();
+    await fbAuth.signOut();
+  },
+
+  // Carga perfil de usuario desde Firestore (colección 'usuarios')
+  async cargarPerfil(uid){
+    try{
+      const doc = await fbDB.collection('usuarios').doc(uid).get();
+      if(doc.exists) return doc.data();
+    }catch(e){}
+    return null;
+  },
+
+  // Aplica visibilidad de tabs según rol
+  aplicarRol(perfil){
+    const rol  = perfil?.rol  || '';
+    const tabs = perfil?.tabs || null;  // array personalizado en Firestore
+
+    // Prioridad: tabs personalizado > preset por rol > acceso total
+    let permitidos;
+    if(tabs && Array.isArray(tabs) && tabs.length > 0){
+      permitidos = tabs;                          // personalizado
+    } else if(rol === 'admin' || ROLE_PRESETS[rol] === null){
+      permitidos = null;                          // acceso total
+    } else {
+      permitidos = ROLE_PRESETS[rol] || ['dashboard'];
+    }
+
+    // Guardar en currentUser para validación en showTab
+    if(currentUser) currentUser.tabs = permitidos;
+
+    // Mostrar/ocultar tabs
+    ALL_TABS.forEach(tab=>{
+      const btn=document.getElementById('tab-'+tab);
+      if(!btn) return;
+      btn.classList.toggle('role-hidden', !(!permitidos || permitidos.includes(tab)));
+    });
+
+    // Badge de rol en header
+    const badge=document.getElementById('user-role-badge');
+    if(badge){
+      if(!permitidos){ badge.textContent='Admin'; }
+      else if(tabs && Array.isArray(tabs)){ badge.textContent='Personalizado'; }
+      else{ const n={admin:'Admin',garita:'Garita',bascula:'Báscula',planificacion:'Planificación',despacho:'Despacho'}; badge.textContent=n[rol]||rol; }
+    }
+  },
+
+  // Listener principal — se ejecuta en cada cambio de auth
+  init(){
+    fbAuth.onAuthStateChanged(async user=>{
+      if(user){
+        // Cargar perfil y rol desde Firestore
+        const perfil = await AUTH.cargarPerfil(user.uid);
+        const rol    = perfil?.rol    || 'planificacion';
+        const nombre = perfil?.nombre || user.email;
+        // areaCD: si es 'TODAS' o null → ve todo; si tiene valor → filtra por ese área
+        const areaCD = perfil?.areaCD || null;
+        currentUser  = { uid:user.uid, email:user.email, nombre, rol, areaCD };
+
+        // Actualizar UI header
+        const pill=document.getElementById('user-pill');
+        const nameEl=document.getElementById('user-name');
+        if(pill)  pill.style.display='flex';
+        if(nameEl) nameEl.textContent=nombre;
+        // Mostrar área asignada en el badge si aplica
+        if(areaCD && areaCD!=='TODAS'){
+          const badge=document.getElementById('user-role-badge');
+          if(badge) badge.title='Área asignada: '+areaCD;
+        }
+
+        // Aplicar restricciones de rol
+        AUTH.aplicarRol(perfil);
+
+        // Mostrar app, ocultar login
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-shell').classList.add('visible');
+
+        // Auditar inicio de sesión
+        DB.audit('LOGIN',user.uid,nombre,'—','Inicio de sesión · rol: '+rol+(areaCD?' · área: '+areaCD:''));
+
+        // Iniciar app
+        INIT_APP();
+
+      } else {
+        // No autenticado — mostrar login
+        currentUser = null;
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('app-shell').classList.remove('visible');
+        const pill=document.getElementById('user-pill');
+        if(pill) pill.style.display='none';
+        const btn=document.getElementById('login-btn');
+        const spin=document.getElementById('login-spinner');
+        if(btn) btn.disabled=false;
+        if(spin) spin.style.display='none';
+      }
+    });
+  }
+};
+
+// ══════════════════════════════════════════════════════════
+// MÓDULO DB — Firestore CRUD + listeners
+// ══════════════════════════════════════════════════════════
+// Colecciones:
+//   viajes/{fechaSel}/{uid}   → estado de cada viaje del día
+//   auditoria/{autoId}        → log de eventos
+//   usuarios/{uid}            → perfil + rol
+//   config/andenes            → estado de andenes en tiempo real
+
+const DB = {
+  // ── Guardar/actualizar estado de un viaje ──
+  async guardarReg(uid){
+    if(!uid||!reg[uid]) return;
+    const fecha=fechaSel||hoy();
+    const data={...reg[uid]};
+    // Eliminar el row original (objeto grande con todas las columnas CSV) — no necesario en Firestore
+    delete data.row;
+    // Eliminar foto (base64 muy grande — no apta para Firestore)
+    delete data.foto;
+    try{
+      await fbDB.collection('viajes').doc(fecha)
+        .collection('registros').doc(uid)
+        .set(data, {merge:true});
+    }catch(e){ console.warn('DB.guardarReg error:',e); }
+  },
+
+  // ── Cargar todos los viajes de una fecha ──
+  async cargarViajes(fecha){
+    try{
+      const snap=await fbDB.collection('viajes').doc(fecha).collection('registros').get();
+      snap.forEach(doc=>{
+        const data=doc.data();
+        const uid=doc.id;
+        if(reg[uid]){
+          // Merge: Firebase tiene prioridad sobre memoria (persiste entre recargas)
+          Object.assign(reg[uid], data);
+        } else if(data.granel){
+          // Viaje de granel que entró a planta: no está en el CSV, se reconstruye desde Firestore
+          reg[uid]=Object.assign({uid}, data);
+        }
+      });
+    }catch(e){ console.warn('DB.cargarViajes error:',e); }
+  },
+
+  // ── Escuchar cambios en tiempo real (listener por fecha) ──
+  // Retorna la función unsubscribe para limpieza
+  escucharViajes(fecha, onUpdate){
+    return fbDB.collection('viajes').doc(fecha)
+      .collection('registros')
+      .onSnapshot(snap=>{
+        snap.docChanges().forEach(change=>{
+          const uid=change.doc.id;
+          const data=change.doc.data();
+          if(reg[uid]) Object.assign(reg[uid], data);
+          else reg[uid]=data;
+        });
+        if(onUpdate) onUpdate();
+      }, e=>console.warn('DB.escucharViajes error:',e));
+  },
+
+  // ── Guardar evento de auditoría ──
+  async audit(modulo,uid,chofer,placa,detalle){
+    try{
+      await fbDB.collection('auditoria').add({
+        ts:         firebase.firestore.FieldValue.serverTimestamp(),
+        tsLocal:    new Date().toLocaleTimeString('es-EC'),
+        fecha:      fechaSel||hoy(),
+        modulo, uid, chofer, placa, detalle,
+        usuario:    currentUser?.nombre||'Sistema',
+        userUid:    currentUser?.uid||'—',
+        rol:        currentUser?.rol||'—',
+      });
+    }catch(e){ console.warn('DB.audit error:',e); }
+  },
+
+  // ── Guardar estado de andenes ──
+  async guardarAndenes(){
+    try{
+      const data=andenes.map(a=>({id:a.id,libre:a.libre,uid:a.uid||null,lbl:a.lbl||''}));
+      await fbDB.collection('config').doc('andenes').set({data, ts:firebase.firestore.FieldValue.serverTimestamp()});
+    }catch(e){ console.warn('DB.guardarAndenes error:',e); }
+  },
+
+  // ── Cargar estado de andenes desde Firestore ──
+  async cargarAndenes(){
+    try{
+      const doc=await fbDB.collection('config').doc('andenes').get();
+      if(doc.exists){
+        const saved=doc.data().data||[];
+        saved.forEach(s=>{
+          const a=andenes.find(x=>x.id===s.id);
+          if(a){ a.libre=s.libre; a.uid=s.uid||null; a.lbl=s.lbl||''; }
+        });
+      }
+    }catch(e){ console.warn('DB.cargarAndenes error:',e); }
+  },
+};
+
+let _viajesListener=null;   // unsubscribe function para listener activo
+
+
+// ══════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════════════════════
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTCU-_7OuwK0xSG_eMJ5QMAI6-FI5O59a33ZP2sDtRPwVZxvJwcXIv_ymBh7-JFhZTPX-bSKngVC2b0/pub?gid=1481211359&single=true&output=csv';
+const APPS_SCRIPT_URL = ''; // Pega aquí tu URL de Apps Script para conexión garantizada
+const REFRESH_SEC = 60;
+// Backend de granel (Apps Script) — el mismo del link del conductor
+const GRANEL_API = 'https://script.google.com/macros/s/AKfycbwkxWCCcS1praEF_bgqasokCJkVU18pYfPFH_pQ3c-nQODFyQbfYg0A2xc-6TVXJhEb/exec';
+
+const COL = {
+  id:['ID-UNICO','ID UNICO'],areaCarga:['ÁREA DE CARGA','AREA DE CARGA'],
+  areaDesc:['ÁREA DE DESCARGA','AREA DE DESCARGA'],detalle:['DETALLE CARGA'],
+  fecha:['FECHA'],tipo:['TIPO CARRO'],operador:['OPERADOR LOGÍSTICO','OPERADOR LOGISTICO'],
+  chofer:['CHOFER'],placa:['PLACA'],tel:['TELEFONO','TELÉFONO'],
+  hora:['HORA SOLICITADA','HORA'],apro:['APROBACION CARGA','APROBACION'],
+  // Columna M — área de operación para filtrado por usuario
+  areaCD:['AREA DE CARGA/DESCARGA','ÁREA DE CARGA/DESCARGA','AREA CARGA/DESCARGA','AREA CD']
+};
+
+// ══════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════
+let todos=[], planData=[], fechaSel='';
+// Filas sintéticas de viajes de granel que llegan a planta (no vienen del CSV)
+let granelRows=[];
+function todasFilas(){ return todos.concat(granelRows); }
+// reg[uid] = { estado, pasos, pesos, tiempos, docs, qr, ... }
+let reg={}, auditoria=[], cronos={}, modalData={}, paseActual=null;
+let cntDown=REFRESH_SEC, cntInt=null;
+
+// ── INFRAESTRUCTURA DE ÁREAS — configurable ──
+// estado: 'libre' | 'ocupado' | 'bloqueado'
+const AREAS_CONFIG = [
+  { id:'patio',     nombre:'Patio de Maniobra',           grupo:'patio',   capacidad:1 },
+  { id:'volteador', nombre:'Volteador',                    grupo:'proceso', capacidad:1 },
+  { id:'b1',        nombre:'Bodega 1',                     grupo:'bodega',  capacidad:1 },
+  { id:'b2',        nombre:'Bodega 2',                     grupo:'bodega',  capacidad:1 },
+  { id:'b3',        nombre:'Bodega 3',                     grupo:'bodega',  capacidad:1 },
+  { id:'b4',        nombre:'Bodega 4',                     grupo:'bodega',  capacidad:1 },
+  { id:'tanques',   nombre:'Tanques de Aceite',            grupo:'bodega',  capacidad:1 },
+  { id:'nexgard',   nombre:'Bodega Nexgard/Desparasitantes',grupo:'especial',capacidad:1 },
+  { id:'a1',        nombre:'Andén 1',                      grupo:'anden',   capacidad:1 },
+  { id:'a2',        nombre:'Andén 2',                      grupo:'anden',   capacidad:1 },
+  { id:'a3',        nombre:'Andén 3',                      grupo:'anden',   capacidad:1 },
+  { id:'a4',        nombre:'Andén 4',                      grupo:'anden',   capacidad:1 },
+  { id:'a5',        nombre:'Andén 5',                      grupo:'anden',   capacidad:1 },
+  { id:'a6',        nombre:'Andén 6',                      grupo:'anden',   capacidad:1 },
+  { id:'a7',        nombre:'Andén 7',                      grupo:'anden',   capacidad:1 },
+  { id:'a8',        nombre:'Andén 8',                      grupo:'anden',   capacidad:1 },
+  { id:'a9',        nombre:'Andén 9',                      grupo:'anden',   capacidad:1 },
+];
+
+// Estado en tiempo de ejecución — separado de la config
+let andenes = AREAS_CONFIG.map(a=>({ ...a, libre:true, uid:null, lbl:'' }));
+
+// Reglas de asignación automática por área de carga
+// La clave debe coincidir con los valores de la columna M del CSV
+const REGLAS_ASIGNACION = {
+  'PETFOOD':      ['a1','a2','a3','a4','a5','a6','a7','a8','a9','patio'],
+  'ALMACENERA':   ['volteador'],
+  'MATERIA PRIMA':['b1','b2','b3','b4','tanques'],
+  'BPT':          ['a1','a2','a3','a4','a5','a6','nexgard','patio'],
+};
+
+// Normaliza el valor del área para comparar sin importar mayúsculas/tildes
+function normArea(str){ return (str||'').toUpperCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function sugerirAndenes(areaCarga){
+  if(!areaCarga) return [];
+  const key=Object.keys(REGLAS_ASIGNACION).find(k=>normArea(areaCarga).includes(normArea(k)));
+  if(!key) return andenes.filter(a=>a.libre).map(a=>a.id);
+  return REGLAS_ASIGNACION[key].filter(id=>{ const a=andenes.find(x=>x.id===id); return a&&a.libre; });
+}
+
+const PASOS=['pendiente','garita-entrada','bascula-entrada','despacho','cargando','bascula-salida','garita-salida','completado'];
+const PNOMBRES=['Pendiente','Garita E.','Báscula E.','Despacho','Cargando','Báscula S.','Garita S.','Completado'];
+
+// ══════════════════════════════════════════════════════════
+// RELOJ
+// ══════════════════════════════════════════════════════════
+function reloj(){
+  const n=new Date(),p=v=>String(v).padStart(2,'0');
+  document.getElementById('clock').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
+  const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('fhdr').textContent=D[n.getDay()]+' '+n.getDate()+' '+M[n.getMonth()]+' '+n.getFullYear();
+}
+setInterval(reloj,1000);reloj();
+
+// ══════════════════════════════════════════════════════════
+// FECHA
+// ══════════════════════════════════════════════════════════
+function hoy(){const n=new Date();return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());}
+function pad(v){return String(v).padStart(2,'0');}
+function normFecha(s){
+  if(!s)return'';s=s.trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m)return m[3]+'-'+pad(m[2])+'-'+pad(m[1]);
+  return s;
+}
+function fmtFecha(y){if(!y)return'';const[a,m,d]=y.split('-');return d+'/'+m+'/'+a;}
+function irHoy(){fechaSel=hoy();document.getElementById('fecha-filtro').value=fechaSel;aplicarFiltro();}
+function cambiarDia(d){
+  const c=document.getElementById('fecha-filtro').value||hoy();
+  const dt=new Date(c+'T12:00:00');dt.setDate(dt.getDate()+d);
+  fechaSel=dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+  document.getElementById('fecha-filtro').value=fechaSel;aplicarFiltro();
+}
+function aplicarFiltro(){
+  fechaSel=document.getElementById('fecha-filtro').value;
+  document.getElementById('hoy-pill').style.display=fechaSel===hoy()?'inline-flex':'none';
+
+  // Filtro base por fecha
+  let filtrado=todasFilas().filter(r=>normFecha(campo(r,'fecha'))===fechaSel);
+
+  // ── FILTRO POR ÁREA DEL USUARIO ──────────────────────────
+  // Si el usuario tiene areaCD definida en su perfil Firestore,
+  // solo ve las cargas que corresponden a SU área (columna M)
+  const userArea = currentUser?.areaCD || null;
+  if(userArea && userArea !== 'TODAS'){
+    filtrado = filtrado.filter(r=>{
+      const areaRow = normArea(campo(r,'areaCD'));
+      return areaRow === normArea(userArea) || areaRow === '';
+    });
+  }
+
+  planData=filtrado;
+  planData.forEach(r=>{const uid=campo(r,'id');if(uid&&!reg[uid])initReg(uid,r);});
+  renderPlan();calcMetrics();renderGePend();renderDashboard();
+  const c=planData.length;
+  const areaLabel=userArea&&userArea!=='TODAS'?' · Área: '+userArea:'';
+  document.getElementById('f-count').textContent=c+' vehículo'+(c!==1?'s':'')+' — '+fmtFecha(fechaSel)+areaLabel;
+}
+
+// ══════════════════════════════════════════════════════════
+// CSV / DATOS
+// ══════════════════════════════════════════════════════════
+function campo(row,key){for(const k of(COL[key]||[])){if(row&&row[k]!==undefined&&row[k]!=='')return row[k];}return'';}
+function parseCSV(txt){
+  const lines=txt.trim().split(/\r?\n/);if(lines.length<2)return[];
+  const hdrs=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map((l,i)=>{
+    const cols=[];let cur='',inQ=false;
+    for(const ch of l){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
+    cols.push(cur.trim());
+    const o={};hdrs.forEach((h,j)=>{o[h]=(cols[j]||'').replace(/^"|"$/g,'');});
+    return o;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+
+const PROXIES=[
+  u=>u,
+  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+];
+
+async function cargarCSV(){
+  setConStatus('loading');
+  if(APPS_SCRIPT_URL){
+    try{
+      const r=await fetch(APPS_SCRIPT_URL+'?t='+Date.now(),{cache:'no-store'});
+      const d=await r.json();
+      if(d&&d.csv){procCSV(d.csv,'Apps Script');return;}
+    }catch(e){}
+  }
+  for(let i=0;i<PROXIES.length;i++){
+    try{
+      const r=await fetch(PROXIES[i](CSV_URL+'&t='+Date.now()),{cache:'no-store'});
+      if(!r.ok)throw new Error();
+      const txt=await r.text();
+      if(!txt.includes(','))throw new Error();
+      procCSV(txt,i===0?'Directo':'Proxy '+i);return;
+    }catch(e){continue;}
+  }
+  cargarDemo();setConStatus('demo');
+}
+
+function procCSV(txt,fuente){
+  todos=parseCSV(txt);
+  document.getElementById('fuente').innerHTML=`<span style="color:var(--grt);background:var(--grb);padding:1px 7px;border-radius:3px;font-size:10px;"><i class="ti ti-circle-check"></i> ${fuente} — ${new Date().toLocaleTimeString('es-EC')}</span>`;
+  setConStatus('ok');
+  aplicarFiltro();
+  iniciarContador();
+}
+
+function setConStatus(s){
+  const dot=document.getElementById('csv-dot'),lbl=document.getElementById('csv-status');
+  if(s==='ok'){dot.className='conn-dot on';lbl.textContent='Google Sheets conectado';}
+  else if(s==='loading'){dot.className='conn-dot';lbl.textContent='Actualizando…';}
+  else{dot.className='conn-dot';lbl.textContent='Modo demo';}
+}
+
+function iniciarContador(){
+  clearInterval(cntInt);cntDown=REFRESH_SEC;
+  cntInt=setInterval(()=>{
+    cntDown--;
+    const el=document.getElementById('countdown');
+    if(el)el.textContent=cntDown+'s';
+    if(cntDown<=0){cntDown=REFRESH_SEC;cargarCSV();}
+  },1000);
+}
+
+function cargarDemo(){
+  const h=hoy().split('-').reverse().join('/');
+  todos=[
+    {'ID-UNICO':'AL-M460I-DTC0-V1.1','ÁREA DE CARGA':'STORE OCEAN','ÁREA DE DESCARGA':'BALANFARINA','DETALLE CARGA':'T5432','FECHA':h,'TIPO CARRO':'CONTENEDOR','OPERADOR LOGÍSTICO':'CORREA','CHOFER':'OSCAR MUÑOZ','PLACA':'BBB-3333','TELEFONO':'939745803','HORA SOLICITADA':'07:00','APROBACION CARGA':'OK'},
+    {'ID-UNICO':'AL-X8VLJ-759F-V1.0','ÁREA DE CARGA':'STORE OCEAN','ÁREA DE DESCARGA':'BALANFARINA','DETALLE CARGA':'AVENA','FECHA':h,'TIPO CARRO':'CONTENEDOR','OPERADOR LOGÍSTICO':'CORREA','CHOFER':'OSCAR MUÑOZ','PLACA':'BBB-3333','TELEFONO':'939745803','HORA SOLICITADA':'08:00','APROBACION CARGA':'OK'},
+    {'ID-UNICO':'AL-PN15L-YE2L-V1.0','ÁREA DE CARGA':'STORE OCEAN','ÁREA DE DESCARGA':'BALANFARINA','DETALLE CARGA':'TRIGO','FECHA':h,'TIPO CARRO':'CONTENEDOR','OPERADOR LOGÍSTICO':'CORREA','CHOFER':'OSCAR MUÑOZ','PLACA':'BBB-3333','TELEFONO':'939745803','HORA SOLICITADA':'09:00','APROBACION CARGA':'OK'},
+    {'ID-UNICO':'AL-RAHIK-BP3M-V1.0','ÁREA DE CARGA':'STORE OCEAN','ÁREA DE DESCARGA':'BALANFARINA','DETALLE CARGA':'PASTA SOYA','FECHA':h,'TIPO CARRO':'CONTENEDOR','OPERADOR LOGÍSTICO':'CORREA','CHOFER':'OSCAR MUÑOZ','PLACA':'BBB-3333','TELEFONO':'939745803','HORA SOLICITADA':'10:00','APROBACION CARGA':'OK'},
+    {'ID-UNICO':'AL-VB2G8-2MTM-V2.0','ÁREA DE CARGA':'ANDY PUERTO','ÁREA DE DESCARGA':'STORE OCEAN','DETALLE CARGA':'MAIZ','FECHA':h,'TIPO CARRO':'BAÑERA','OPERADOR LOGÍSTICO':'CORREA','CHOFER':'WILLIAM','PLACA':'AAA-1334','TELEFONO':'939745803','HORA SOLICITADA':'14:00','APROBACION CARGA':'OK'},
+  ];
+  document.getElementById('fuente').innerHTML=`<span style="color:var(--amt);background:var(--amb);padding:1px 7px;border-radius:3px;font-size:10px;">⚠ Modo demo — datos de ejemplo</span>`;
+  aplicarFiltro();iniciarContador();
+}
+
+// ══════════════════════════════════════════════════════════
+// REGISTRO POR ID
+// ══════════════════════════════════════════════════════════
+function initReg(uid,row){
+  reg[uid]={
+    uid,estado:'pendiente',row,
+    chofer:campo(row,'chofer'),placa:campo(row,'placa'),
+    detalle:campo(row,'detalle'),areaCarga:campo(row,'areaCarga'),
+    areaDesc:campo(row,'areaDesc'),tipo:campo(row,'tipo'),
+    hora:campo(row,'hora'),apro:campo(row,'apro'),tel:campo(row,'tel'),
+    areaCD:campo(row,'areaCD'),  // ← columna M: área de operación
+    qrGenerado:false,qrEnviado:false,tsQR:null,
+    tsGE:null,condicion:null,operGE:null,
+    peBruto:null,tsBE:null,
+    anden:null,despachador:null,docs:false,obsDesp:'',tsDesp:null,
+    tsIniC:null,tsFinC:null,tiempoC:null,
+    peSalida:null,peNeto:null,tsBS:null,
+    precintos:'',guias:'',foto:null,autorizadoPor:'',obsSal:'',tsGS:null,
+    tsIngreso:null
+  };
+}
+
+function avanzar(uid,estado){
+  if(!reg[uid])return;
+  reg[uid].estado=estado;
+  DB.guardarReg(uid);   // ← persiste en Firestore
+  actualizarBadges();calcMetrics();renderPlan();renderGePend();
+  renderDashboard();renderBeTabla();renderBsTabla();renderGsTabla();renderCargasActivas();renderAndenes();
+  checkAlertas();
+}
+
+function actualizarBadges(){
+  const inPlan=uid=>planData.some(r=>campo(r,'id')===uid);
+  const cnt=s=>Object.values(reg).filter(r=>inPlan(r.uid)&&r.estado===s).length;
+  const qrc=Object.values(reg).filter(r=>inPlan(r.uid)&&r.qrGenerado&&r.estado==='pendiente').length;
+  document.getElementById('nb-qr').textContent=qrc;
+  document.getElementById('nb-ge').textContent=cnt('pendiente')+cnt('garita-entrada');
+  document.getElementById('nb-be').textContent=cnt('garita-entrada');
+  document.getElementById('nb-d').textContent=cnt('bascula-entrada')+cnt('despacho')+cnt('cargando');
+  document.getElementById('nb-bs').textContent=cnt('cargando');
+  document.getElementById('nb-gs').textContent=cnt('bascula-salida')+cnt('garita-salida');
+}
+
+// ══════════════════════════════════════════════════════════
+// MÉTRICAS Y DASHBOARD
+// ══════════════════════════════════════════════════════════
+function calcMetrics(){
+  const uids=planData.map(r=>campo(r,'id'));
+  const total=uids.length;
+  const pend=uids.filter(u=>!reg[u]||reg[u].estado==='pendiente').length;
+  const dentro=uids.filter(u=>reg[u]&&!['pendiente','completado'].includes(reg[u].estado)).length;
+  const carg=uids.filter(u=>reg[u]&&reg[u].estado==='cargando').length;
+  const done=uids.filter(u=>reg[u]&&reg[u].estado==='completado').length;
+  const neto=Object.values(reg).filter(r=>r.peNeto).reduce((s,r)=>s+r.peNeto,0);
+  ['m-tot','d-total'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=total;});
+  ['m-pend','d-pend'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=pend;});
+  ['m-proc','d-dentro'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=dentro;});
+  ['m-done','d-done'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=done;});
+  const dca=document.getElementById('d-cargando');if(dca)dca.textContent=carg;
+  const dn=document.getElementById('d-neto');if(dn)dn.textContent=neto>0?neto.toLocaleString('es-EC')+' kg':'—';
+  const rn=document.getElementById('r-pesotot');if(rn)rn.textContent=neto>0?neto.toLocaleString('es-EC'):' —';
+  if(total>0){
+    pbarSet('pb-dentro',dentro/total*100);
+    pbarSet('pb-carg',carg/total*100);
+    pbarSet('pb-done',done/total*100);
+  }
+  const ts=document.getElementById('dash-ts');if(ts)ts.textContent='— '+new Date().toLocaleTimeString('es-EC');
+  actualizarBadges();
+  renderReportes();
+}
+function pbarSet(id,pct){const el=document.getElementById(id);if(el)el.style.width=Math.round(pct)+'%';}
+
+function renderDashboard(){
+  // Vehículos en planta
+  const body=document.getElementById('dash-en-planta');
+  if(!body)return;
+  const activos=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&!['pendiente','completado'].includes(r.estado));
+  if(!activos.length){body.innerHTML='<tr><td colspan="7" class="ec">Sin vehículos en planta</td></tr>';return;}
+  body.innerHTML=activos.map(r=>{
+    const and=andenes.find(a=>a.uid===r.uid);
+    const tsIn=r.tsIngreso;
+    let elapsed='—';
+    if(tsIn){
+      const [h,m]=tsIn.split(':').map(Number);
+      const start=new Date();start.setHours(h,m,0,0);
+      const min=Math.round((Date.now()-start.getTime())/60000);
+      if(min>=0)elapsed=min+'m';
+    }
+    return`<tr>
+      <td><span class="mt">${r.uid}</span></td>
+      <td>${r.chofer}</td><td><span class="mt">${r.placa}</span></td>
+      <td>${r.detalle}</td><td>${estadoBadge(r.estado)}</td>
+      <td>${and?and.nombre:(r.anden||'—')}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${elapsed}</td>
+    </tr>`;
+  }).join('');
+
+  // Andenes dashboard
+  const dg=document.getElementById('dash-andenes');
+  if(dg)dg.innerHTML=andenes.map(a=>`<div class="anden ${a.libre?'libre':cronos[a.uid]?.running?'cargando':'ocupado'}">
+    <div class="anden-num" style="font-size:11px;">${a.nombre}</div>
+    <div style="font-size:18px;margin:4px 0;">${a.libre?'<i class="ti ti-parking"></i>':cronos[a.uid]?.running?'<i class="ti ti-loader"></i>':'<i class="ti ti-truck"></i>'}</div>
+    <div class="anden-sub">${a.libre?'Libre':(a.lbl||'Ocupado')}</div>
+  </div>`).join('');
+}
+
+function checkAlertas(){
+  const alertas=[];
+  // Vehículos fuera de horario
+  planData.forEach(r=>{
+    const uid=campo(r,'id');const rv=reg[uid];if(!rv||rv.estado!=='pendiente')return;
+    const hp=campo(r,'hora');if(!hp)return;
+    const[h,m]=hp.split(':').map(Number);
+    const prog=new Date();prog.setHours(h,m,0,0);
+    if(Date.now()>prog.getTime()+30*60000){
+      alertas.push({tipo:'warn',msg:`<strong>${uid}</strong> — ${campo(r,'chofer')} aún no ha ingresado (programado ${hp})`});
+    }
+  });
+  const el=document.getElementById('alertas-body');
+  const cnt=document.getElementById('alertas-cnt');
+  if(cnt)cnt.textContent=alertas.length;
+  if(!el)return;
+  el.innerHTML=alertas.length?alertas.map(a=>`<div class="alert a-${a.tipo||'warn'}">${a.msg}</div>`).join('')
+    :'<div style="font-size:12px;color:var(--tx3);text-align:center;padding:.75rem;">Sin alertas activas</div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// PLANIFICACIÓN
+// ══════════════════════════════════════════════════════════
+function estadoBadge(est){
+  const m={pendiente:'b-pend',garita:' b-garita','garita-entrada':'b-garita','bascula-entrada':'b-bascula',despacho:'b-desp',cargando:'b-carga','bascula-salida':'b-bascula','garita-salida':'b-garita',completado:'b-salida'};
+  const n={pendiente:'Pendiente','garita-entrada':'Garita E.','bascula-entrada':'Báscula E.',despacho:'Despacho',cargando:'⟳ Cargando','bascula-salida':'Báscula S.','garita-salida':'Aut. salida',completado:'Completado'};
+  return`<span class="badge ${m[est]||'b-pend'}">${n[est]||est}</span>`;
+}
+
+function renderPlan(){
+  const body=document.getElementById('plan-body');if(!body)return;
+  const q=(document.getElementById('sp').value||'').toLowerCase();
+  const f=planData.filter(r=>!q||[campo(r,'id'),campo(r,'chofer'),campo(r,'placa'),campo(r,'detalle')].join(' ').toLowerCase().includes(q));
+  if(!f.length){body.innerHTML='<tr><td colspan="12" class="ec">Sin vehículos</td></tr>';return;}
+
+  const rows=[];
+  f.forEach(r=>{
+    const uid=campo(r,'id'),rv=reg[uid],est=rv?rv.estado:'pendiente';
+    const apro=campo(r,'apro');
+    const safeUid=uid.replace(/[^a-zA-Z0-9_-]/g,'_');
+    const aproBadge=apro.toLowerCase()==='ok'
+      ?`<span class="badge b-ok"><i class="ti ti-check"></i> OK</span>`
+      :`<span class="badge b-pend">${apro}</span>`;
+
+    // QR column: si ya generado → botón "Ver QR", si no → botón "Generar QR"
+    const qrCol=rv?.qrGenerado
+      ?`<button class="btn btn-sm btn-purple" onclick="toggleQRRow('${safeUid}','${uid}')">
+          <i class="ti ti-qrcode"></i> Ver QR ${rv.qrEnviado?'<span class="badge b-ok" style="font-size:9px;padding:1px 4px;">Enviado</span>':''}
+        </button>`
+      :`<button class="btn btn-sm" onclick="genQRSingle('${uid}');renderPlan();" style="border-color:var(--pu);color:var(--pu);">
+          <i class="ti ti-qrcode"></i> Generar QR
+        </button>`;
+
+    // Acción flujo
+    const accion=est==='pendiente'
+      ?`<button class="btn btn-success btn-sm" onclick="geAbrirModal('${uid}')"><i class="ti ti-login"></i> Ingresar</button>`
+      :est==='garita-entrada'
+      ?`<button class="btn btn-purple btn-sm" onclick="showTab('bascula-e')"><i class="ti ti-weight"></i> Báscula</button>`
+      :['bascula-entrada'].includes(est)
+      ?`<button class="btn btn-warn btn-sm" onclick="showTab('despacho')"><i class="ti ti-building-warehouse"></i> Despacho</button>`
+      :['despacho','cargando'].includes(est)
+      ?`<button class="btn btn-sm" onclick="showTab('despacho')"><i class="ti ti-eye"></i> Ver carga</button>`
+      :est==='bascula-salida'
+      ?`<button class="btn btn-sm" onclick="showTab('garita-s')"><i class="ti ti-logout"></i> Autorizar</button>`
+      :est==='completado'
+      ?`<span class="badge b-salida"><i class="ti ti-checks"></i> Completado</span>`:'';
+
+    rows.push(`<tr id="row-${safeUid}">
+      <td><span class="mt" style="font-size:10px;">${uid}</span></td>
+      <td style="font-size:11px;color:var(--tx2);">${campo(r,'areaCarga')}</td>
+      <td style="font-size:11px;color:var(--tx2);">${campo(r,'areaDesc')}</td>
+      <td><strong style="font-size:12px;">${campo(r,'detalle')}</strong></td>
+      <td style="font-size:11px;color:var(--tx2);">${campo(r,'tipo')}</td>
+      <td>${campo(r,'chofer')}</td>
+      <td><span class="mt">${campo(r,'placa')}</span></td>
+      <td><span class="mt">${campo(r,'hora')}</span></td>
+      <td>${aproBadge}</td>
+      <td>${qrCol}</td>
+      <td>${estadoBadge(est)}</td>
+      <td>${accion}</td>
+    </tr>`);
+
+    // Fila QR expandible (oculta por defecto)
+    rows.push(`<tr class="qr-popup-row" id="qrrow-${safeUid}" style="display:none;">
+      <td colspan="12">
+        <div class="qr-popup-inner">
+          <div class="qr-popup-img" id="qrimg-${safeUid}"></div>
+          <div style="margin-top:8px;">
+            <div class="qr-id-text" onclick="copiarTexto('${uid}',this)" title="Toca para copiar">${uid}</div>
+          </div>
+          <div class="qr-popup-info">
+            <div style="font-size:13px;font-weight:500;margin-bottom:6px;">Código QR — ${uid}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;margin-bottom:10px;">
+              <div><span class="sl">Chofer</span>${campo(r,'chofer')}</div>
+              <div><span class="sl">Placa</span><span class="mt">${campo(r,'placa')}</span></div>
+              <div><span class="sl">Detalle</span>${campo(r,'detalle')}</div>
+              <div><span class="sl">Hora prog.</span><span class="mt">${campo(r,'hora')}</span></div>
+              <div><span class="sl">Tipo carro</span>${campo(r,'tipo')}</div>
+              <div><span class="sl">Área carga</span>${campo(r,'areaCarga')}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-success btn-sm" onclick="enviarWAQR('${uid}')"><i class="ti ti-brand-whatsapp"></i> Enviar WhatsApp</button>
+              <button class="btn btn-sm" onclick="descargarQRById('${safeUid}','${uid}')"><i class="ti ti-download"></i> Descargar PNG</button>
+              <button class="btn btn-sm" onclick="cerrarQRRow('${safeUid}')"><i class="ti ti-x"></i> Cerrar</button>
+            </div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:8px;"><i class="ti ti-info-circle"></i> Válido solo para hoy · Un solo uso · Verificado en garita</div>
+          </div>
+        </div>
+      </td>
+    </tr>`);
+  });
+  body.innerHTML=rows.join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// QR CON LOGO AGRIPAC — canvas personalizado
+// ══════════════════════════════════════════════════════════
+
+// Logo AGRIPAC incrustado como base64 (SVG → no depende de URLs externas)
+const AGRIPAC_LOGO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzFEOUU3NSIgcng9IjIwIi8+CiAgPHRleHQgeD0iMTAwIiB5PSI5NSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBBcmlhbCIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1MiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIj5BRzwvdGV4dD4KICA8dGV4dCB4PSIxMDAiIHk9IjE0NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iNzAwIiBmb250LXNpemU9IjE4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9IjMiPkFHUklQQUM8L3RleHQ+Cjwvc3ZnPgo=';
+
+// Objeto Image precargado para el logo (evita re-cargar en cada QR)
+let _logoImg = null;
+function getLogoImg(){
+  return new Promise(resolve=>{
+    if(_logoImg){resolve(_logoImg);return;}
+    const img=new Image();
+    img.onload=()=>{_logoImg=img;resolve(img);};
+    img.onerror=()=>resolve(null);
+    img.src=AGRIPAC_LOGO;
+  });
+}
+
+/**
+ * Dibuja un QR con logo AGRIPAC centrado en un elemento contenedor.
+ * @param {HTMLElement} container  – div donde se inserta el canvas
+ * @param {string}      uid        – ID-UNICO (texto que va en el QR)
+ * @param {number}      size       – tamaño en px del QR final (default 200)
+ * @returns {HTMLCanvasElement}    – canvas generado (para descargar)
+ */
+async function dibujarQRconLogo(container, uid, size=200){
+  container.innerHTML='';
+
+  const qrData = makeQRData(uid);
+
+  // 1. Generar QR base con qrcodejs en un div temporal oculto
+  const tmp = document.createElement('div');
+  tmp.style.cssText='position:absolute;left:-9999px;top:-9999px;';
+  document.body.appendChild(tmp);
+
+  await new Promise(resolve=>{
+    try{
+      new QRCode(tmp,{
+        text: qrData,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H   // H = 30% corrección → espacio para logo
+      });
+      // qrcodejs es síncrono internamente pero el canvas puede tardar 1 frame
+      setTimeout(resolve, 50);
+    }catch(e){resolve();}
+  });
+
+  const qrCanvas = tmp.querySelector('canvas');
+  document.body.removeChild(tmp);
+
+  // 2. Canvas final donde componemos QR + logo
+  const canvas = document.createElement('canvas');
+  canvas.width  = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  if(qrCanvas){
+    // Dibujar QR base
+    ctx.drawImage(qrCanvas, 0, 0, size, size);
+  } else {
+    // Fallback: fondo blanco con texto
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
+    ctx.fillStyle='#000';ctx.font='12px Arial';
+    ctx.textAlign='center';ctx.fillText('QR: '+uid.slice(0,20),size/2,size/2);
+  }
+
+  // 3. Logo centrado — tamaño = 22% del QR, con padding blanco alrededor
+  const logoSize  = Math.round(size * 0.22);
+  const padSize   = Math.round(size * 0.26);   // borde blanco incluido
+  const logoX     = Math.round((size - padSize) / 2);
+  const logoY     = Math.round((size - padSize) / 2);
+
+  // Fondo blanco con borde redondeado para que el logo no tape módulos críticos
+  const r = Math.round(padSize * 0.2);
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, logoX - 2, logoY - 2, padSize + 4, padSize + 4, r + 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Intentar cargar logo
+  const logo = await getLogoImg();
+  if(logo){
+    const lx = logoX + Math.round((padSize - logoSize)/2);
+    const ly = logoY + Math.round((padSize - logoSize)/2);
+    ctx.save();
+    // Clip redondeado para el logo
+    ctx.beginPath();
+    roundRect(ctx, lx, ly, logoSize, logoSize, Math.round(logoSize*0.18));
+    ctx.clip();
+    ctx.drawImage(logo, lx, ly, logoSize, logoSize);
+    ctx.restore();
+  } else {
+    // Fallback texto "AG" si el logo no carga
+    ctx.save();
+    ctx.fillStyle='#1D9E75';
+    roundRect(ctx, logoX, logoY, padSize, padSize, r);
+    ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.font=`bold ${Math.round(padSize*0.45)}px Arial Black, Arial`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('AG', logoX+padSize/2, logoY+padSize/2);
+    ctx.restore();
+  }
+
+  container.appendChild(canvas);
+  return canvas;
+}
+
+// Helper: dibuja un rectángulo redondeado en el path actual
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function makeQRData(uid){
+  const rv=reg[uid]||{};
+  // El QR contiene solo el ID para que el escáner lo lea limpio
+  // Se puede ampliar a JSON si el lector lo soporta
+  return uid;
+}
+
+// ── Fila expandible en tabla planificación ──
+function toggleQRRow(safeUid, uid){
+  const row=document.getElementById('qrrow-'+safeUid);
+  if(!row)return;
+  const visible=row.style.display!=='none';
+  if(visible){row.style.display='none';return;}
+  const imgEl=document.getElementById('qrimg-'+safeUid);
+  if(imgEl&&!imgEl.dataset.built){
+    imgEl.dataset.built='1';
+    dibujarQRconLogo(imgEl, uid, 160);
+  }
+  row.style.display='';
+}
+
+function cerrarQRRow(safeUid){
+  const row=document.getElementById('qrrow-'+safeUid);
+  if(row)row.style.display='none';
+}
+
+function descargarQRById(safeUid, uid){
+  const el=document.getElementById('qrimg-'+safeUid);
+  if(!el){alert('Abre el QR primero con "Ver QR"');return;}
+  const canvas=el.querySelector('canvas');
+  if(canvas){
+    _descargarCanvas(canvas, uid);
+  } else {
+    // Si aún no está construido, generarlo y descargar
+    dibujarQRconLogo(el, uid, 160).then(c=>{if(c)_descargarCanvas(c,uid);});
+  }
+}
+
+function _descargarCanvas(canvas, uid){
+  const a=document.createElement('a');
+  a.href=canvas.toDataURL('image/png');
+  a.download='QR-AGRIPAC-'+uid+'.png';
+  a.click();
+}
+
+// ── Módulo QR (pestaña QR) ──
+function generarQR(){
+  const uid=document.getElementById('qr-id').value.trim().toUpperCase();
+  const rv=reg[uid];
+  const el=document.getElementById('qr-info');
+  if(!rv){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado en la planificación de hoy</div>';return;}
+  el.innerHTML='';
+  genQRSingle(uid, true);
+}
+
+function genQRSingle(uid, show=false){
+  const rv=reg[uid];if(!rv)return;
+  rv.qrGenerado=true;rv.tsQR=horaActual();
+  DB.guardarReg(uid);   // ← persiste que el QR fue generado
+  if(show){
+    const wrap=document.getElementById('qr-display');
+    const container=document.getElementById('qr-canvas');
+    container.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:1rem;">Generando QR…</div>';
+    wrap.style.display='flex';
+    dibujarQRconLogo(container, uid, 180).then(()=>{
+      document.getElementById('qr-data').textContent=uid+' · '+rv.chofer+' · '+rv.placa;
+      // Texto copiable debajo del QR
+      let tc=document.getElementById('qr-text-copy');
+      if(!tc){ tc=document.createElement('div'); tc.id='qr-text-copy'; container.parentNode.insertBefore(tc,container.nextSibling); }
+      tc.innerHTML=`<div class="qr-id-text" onclick="copiarTexto('${uid}',this)" title="Toca para copiar el ID">${uid}</div>`;
+    });
+    paseActual=uid;
+  }
+  renderQRTabla();
+  renderPlan();
+  actualizarBadges();
+  audit('QR',uid,rv.chofer,rv.placa,'QR generado con logo AGRIPAC');
+}
+
+function generarTodosQR(){
+  planData.forEach(r=>{const uid=campo(r,'id');if(uid&&reg[uid])genQRSingle(uid);});
+  renderQRTabla();
+}
+
+function renderQRTabla(){
+  const body=document.getElementById('qr-tabla');if(!body)return;
+  const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.qrGenerado);
+  document.getElementById('qr-count').textContent=items.length;
+  if(!items.length){body.innerHTML='<tr><td colspan="6" class="ec">Sin QRs generados</td></tr>';return;}
+  body.innerHTML=items.map(r=>`<tr>
+    <td><span class="mt" style="font-size:10px;">${r.uid}</span></td>
+    <td>${r.chofer}</td><td><span class="mt">${r.placa}</span></td>
+    <td>${r.estado==='completado'?'<span class="badge b-used">Usado</span>':'<span class="badge b-ok">Activo</span>'}</td>
+    <td style="font-family:var(--mono);font-size:11px;">${r.tsQR||'—'}</td>
+    <td>${r.qrEnviado
+      ?'<span class="badge b-ok"><i class="ti ti-check"></i> Enviado</span>'
+      :`<button class="btn btn-success btn-sm" onclick="enviarWAQR('${r.uid}')"><i class="ti ti-brand-whatsapp"></i> Enviar</button>`}
+    </td>
+  </tr>`).join('');
+}
+
+function descargarQR(){
+  const container=document.getElementById('qr-canvas');if(!container)return;
+  const canvas=container.querySelector('canvas');
+  if(canvas){_descargarCanvas(canvas, paseActual||'QR');}
+  else{alert('Genera el QR primero');}
+}
+
+function enviarWhatsApp(){paseActual&&enviarWAQR(paseActual);}
+
+function enviarWAQR(uid){
+  const rv=reg[uid];if(!rv)return;
+  rv.qrEnviado=true;
+  DB.guardarReg(uid);   // ← persiste el envío
+  const msg=`🟢 *AGRIPAC S.A. — Pase de Ingreso*\n\n🆔 ID: *${uid}*\n👤 Chofer: ${rv.chofer}\n🚛 Placa: ${rv.placa}\n📦 Carga: ${rv.detalle}\n📍 Área carga: ${rv.areaCarga}\n📍 Área descarga: ${rv.areaDesc}\n🕐 Hora programada: ${rv.hora}\n📅 ${fmtFecha(fechaSel)}\n\n_Muestre este QR en la garita de entrada._\n_Válido solo para hoy · Un solo uso_`;
+  const tel=rv.tel?rv.tel.replace(/\D/g,''):'';
+  window.open('https://wa.me/'+(tel?'593'+tel.slice(-9):'')+`?text=${encodeURIComponent(msg)}`,'_blank');
+  renderQRTabla();
+  renderPlan();
+  audit('WhatsApp',uid,rv.chofer,rv.placa,'QR enviado por WhatsApp');
+}
+
+// ══════════════════════════════════════════════════════════
+// GARITA ENTRADA — SCANNER + MANUAL
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// SCANNER QR — SISTEMA MULTI-MÓDULO
+// Prefijos: 'ge' garita entrada, 'be' báscula entrada,
+//           'd' despacho, 'bs' báscula salida
+// ══════════════════════════════════════════════════════════
+let camStreams={}, camIntervals={}, modoActivo={};
+
+// Callbacks: qué hace cada módulo cuando lee un QR exitoso
+const scanCallbacks={
+  ge: uid => { procesarQRLeido_ge(uid); },
+  be: uid => { beDesdeQR(uid); },
+  d:  uid => { dDesdeQR(uid); },
+  bs: uid => { bsDesdeQR(uid); },
+  gs: uid => { gsDesdeQR(uid); },   // ← NUEVO garita salida
+};
+
+function activarModo(pfx, modo){
+  modoActivo[pfx]=modo;
+  // Botones
+  const bc=document.getElementById(pfx+'-btn-cam');
+  const bm=document.getElementById(pfx+'-btn-manual');
+  if(bc) bc.className='btn'+(modo==='cam'?' btn-primary':'');
+  if(bm) bm.className='btn'+(modo==='manual'?' btn-primary':'');
+  // Paneles
+  const mc=document.getElementById(pfx+'-modo-cam');
+  const mm=document.getElementById(pfx+'-modo-manual');
+  if(mc) mc.style.display=modo==='cam'?'block':'none';
+  if(mm) mm.style.display=modo==='manual'?'block':'none';
+  // Limpiar resultado
+  const res=document.getElementById(pfx+'-result')||document.getElementById(pfx+'-info');
+  if(res) res.innerHTML='';
+  // Ocultar peso wrap si existe
+  const pw=document.getElementById(pfx+'-peso-wrap');
+  if(pw) pw.style.display='none';
+  if(modo==='cam') iniciarCamara(pfx);
+  else { detenerCamara(pfx); const inp=document.getElementById(pfx+'-id'); if(inp) inp.focus(); }
+}
+
+function iniciarCamara(pfx){
+  const video=document.getElementById(pfx+'-video');
+  const status=document.getElementById(pfx+'-cam-status');
+  detenerCamara(pfx);
+  if(!video||!status) return;
+  if(!navigator.mediaDevices?.getUserMedia){
+    status.textContent='Cámara no disponible — use ingreso manual';
+    status.className='scan-status err'; return;
+  }
+  status.textContent='Solicitando acceso a cámara…';
+  status.className='scan-status';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}}})
+    .then(stream=>{
+      camStreams[pfx]=stream;
+      video.srcObject=stream;
+      video.style.display='block';
+      video.onloadedmetadata=()=>{
+        video.play();
+        status.textContent='Apunte el QR al recuadro…';
+        status.className='scan-status';
+        camIntervals[pfx]=setInterval(()=>leerFrameQR(pfx),250);
+      };
+    })
+    .catch(err=>{
+      status.textContent='Sin acceso a cámara: '+err.message;
+      status.className='scan-status err';
+    });
+}
+
+function detenerCamara(pfx){
+  clearInterval(camIntervals[pfx]); delete camIntervals[pfx];
+  if(camStreams[pfx]){ camStreams[pfx].getTracks().forEach(t=>t.stop()); delete camStreams[pfx]; }
+  const video=document.getElementById(pfx+'-video');
+  if(video){ video.srcObject=null; video.style.display='none'; }
+}
+
+function leerFrameQR(pfx){
+  const video=document.getElementById(pfx+'-video');
+  const canvas=document.getElementById(pfx+'-canvas');
+  const status=document.getElementById(pfx+'-cam-status');
+  if(!video||!canvas||video.readyState<video.HAVE_ENOUGH_DATA) return;
+  const w=video.videoWidth, h=video.videoHeight;
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,w,h);
+  try{
+    const code=jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});
+    if(code){
+      detenerCamara(pfx);
+      if(status){ status.textContent='✓ QR detectado'; status.className='scan-status ok'; }
+      // El QR contiene el ID-UNICO directamente (ver makeQRData)
+      const uid=code.data.trim().toUpperCase();
+      if(scanCallbacks[pfx]) scanCallbacks[pfx](uid);
+    }
+  }catch(e){}
+}
+
+// ── Reiniciar scanner de un módulo al cambiar de pestaña
+function detenerTodosScanners(){
+  ['ge','be','d','bs','gs'].forEach(pfx=>detenerCamara(pfx));
+}
+
+// ── GARITA ENTRADA ──
+function procesarQRLeido_ge(uid){
+  const el=document.getElementById('ge-result');
+  const row=todasFilas().find(r=>(campo(r,'id')||'').toUpperCase()===uid);
+  if(!row){
+    // No está en la planificación del CSV → puede ser un viaje de granel
+    buscarGranel(uid, true);
+    return;
+  }
+  geRenderResultado(row, true);
+}
+
+function geSearch(){
+  const q=document.getElementById('ge-id')?.value.trim().toUpperCase()||'';
+  const el=document.getElementById('ge-result');
+  if(!q){el.innerHTML='';return;}
+  const row=todasFilas().find(r=>(campo(r,'id')||'').toUpperCase()===q||(campo(r,'placa')||'').toUpperCase().includes(q));
+  if(!row){ buscarGranel(q, false); return; }
+  geRenderResultado(row, false);
+}
+
+// ══════════════════════════════════════════════════════════
+// GRANEL — viajes del link del conductor que llegan a planta
+// ══════════════════════════════════════════════════════════
+async function granelApi(accion, datos){
+  if(!GRANEL_API) throw new Error('Falta configurar GRANEL_API');
+  const u=fbAuth.currentUser; if(!u) throw new Error('Sesión no iniciada');
+  const idToken=await u.getIdToken();
+  let r;
+  try{
+    r=await fetch(GRANEL_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(Object.assign({accion,idToken},datos||{}))});
+  }catch(e){ const err=new Error('Sin conexión con la hoja de granel'); err.red=true; throw err; }
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'Error en la hoja de granel');
+  return j;
+}
+
+// Convierte un viaje de la hoja VIAJES en una fila con el formato del CSV de planificación
+function rowGranel(uid, origen, destino, producto, chofer, placa, fecha){
+  return {
+    'ID-UNICO':uid,'ÁREA DE CARGA':origen,'ÁREA DE DESCARGA':destino,
+    'DETALLE CARGA':producto+' · GRANEL','FECHA':fmtFecha(fecha),'TIPO CARRO':'GRANEL',
+    'OPERADOR LOGÍSTICO':'','CHOFER':chofer,'PLACA':placa,'TELEFONO':'',
+    'HORA SOLICITADA':'','APROBACION CARGA':'OK','AREA DE CARGA/DESCARGA':'ALMACENERA'
+  };
+}
+
+function registrarFilaGranel(v){
+  const uid=String(v.ID_VIAJE).toUpperCase();
+  const fecha=fechaSel||hoy();
+  let row=granelRows.find(r=>campo(r,'id')===uid);
+  if(!row){
+    row=rowGranel(uid,v.ORIGEN,v.DESTINO,v.PRODUCTO||'',v.CHOFER||'',v.PLACA||'',fecha);
+    granelRows.push(row);
+  }
+  aplicarFiltro();                       // crea reg[uid] con initReg
+  const rv=reg[uid];
+  if(rv){
+    Object.assign(rv,{
+      granel:true, qrGenerado:true, fechaPlanta:fecha,
+      origen:v.ORIGEN, buqueLote:v.BUQUE_LOTE||'', nViaje:v.N_VIAJE||'',
+      netoOrigenKg:Number(v.O_NETO_KG)||null, codigoConductor:v.CODIGO_CONDUCTOR||''
+    });
+  }
+  return row;
+}
+
+// Al recargar: reconstruye las filas de granel guardadas en Firestore
+function inyectarGranelDesdeReg(){
+  let nuevos=0;
+  Object.values(reg).forEach(r=>{
+    if(!r||!r.granel) return;
+    if(granelRows.some(x=>campo(x,'id')===r.uid)) return;
+    granelRows.push(rowGranel(r.uid,r.areaCarga||r.origen||'',r.areaDesc||'',(r.detalle||'').replace(' · GRANEL',''),r.chofer||'',r.placa||'',r.fechaPlanta||fechaSel||hoy()));
+    nuevos++;
+  });
+  return nuevos;
+}
+
+async function buscarGranel(uid, desdeQR){
+  const el=document.getElementById('ge-result');
+  el.innerHTML='<div class="alert a-info"><i class="ti ti-loader"></i> Buscando viaje de granel…</div>';
+  const reintentar=()=>setTimeout(()=>{ if(desdeQR && modoActivo['ge']==='cam') iniciarCamara('ge'); },3500);
+  try{
+    const v=(await granelApi('staff_viaje',{idViaje:uid})).viaje;
+    if(v._tipoDestino!=='PLANTA'){
+      el.innerHTML=`<div class="alert a-err"><i class="ti ti-alert-triangle"></i> El viaje ${esc(uid)} va hacia <strong>${esc(v.DESTINO)}</strong>, no a planta.</div>`; reintentar(); return;
+    }
+    if(String(v.ESTADO).toUpperCase()==='COMPLETADO' && !reg[uid]){
+      el.innerHTML=`<div class="alert a-err"><i class="ti ti-lock"></i> El viaje ${esc(uid)} ya fue completado.</div>`; reintentar(); return;
+    }
+    if(!['EN TRANSITO','EN DESTINO','COMPLETADO'].includes(String(v.ESTADO).toUpperCase())){
+      el.innerHTML=`<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> El viaje ${esc(uid)} aún no registra salida del origen (estado: ${esc(v.ESTADO)}).</div>`; reintentar(); return;
+    }
+    const row=registrarFilaGranel(v);
+    geRenderResultado(row, desdeQR);
+  }catch(e){
+    el.innerHTML=`<div class="alert a-err"><i class="ti ti-qrcode"></i> ${desdeQR?'QR no reconocido':'No encontrado'}: <strong>${esc(uid)}</strong> — ${esc(e.message)}</div>`;
+    reintentar();
+  }
+}
+
+// ── Cola de sincronización con la hoja (reintenta si no hay señal) ──
+const GQ_KEY='agr_granel_cola';
+let granelCola=(()=>{ try{ return JSON.parse(localStorage.getItem(GQ_KEY))||[]; }catch(e){ return []; } })();
+let granelEnviando=false;
+function guardarCola(){ try{ localStorage.setItem(GQ_KEY,JSON.stringify(granelCola)); }catch(e){} pintarSyncGranel(); }
+
+function granelEvento(uid, evento, datos){
+  const rv=reg[uid]; if(!rv||!rv.granel) return;
+  granelCola.push({uid, evento, datos:datos||{}, tsCliente:new Date().toISOString()});
+  guardarCola();
+  flushGranel();
+}
+
+async function flushGranel(){
+  if(granelEnviando||!granelCola.length||!fbAuth.currentUser) return;
+  granelEnviando=true;
+  try{
+    while(granelCola.length){
+      const it=granelCola[0];
+      try{
+        await granelApi('staff_planta',{idViaje:it.uid,evento:it.evento,datos:it.datos,tsCliente:it.tsCliente});
+        granelCola.shift(); guardarCola();
+      }catch(e){
+        if(e.red) break;                                   // sin señal: se reintenta luego
+        console.warn('Granel — evento descartado:',it,e.message);
+        audit('Granel',it.uid,reg[it.uid]?.chofer||'',reg[it.uid]?.placa||'','No sincronizado ('+it.evento+'): '+e.message);
+        granelCola.shift(); guardarCola();
+      }
+    }
+  }finally{ granelEnviando=false; }
+}
+setInterval(flushGranel,60000);
+
+function pintarSyncGranel(){
+  const el=document.getElementById('gr-sync'); if(!el) return;
+  el.innerHTML=granelCola.length
+    ?`<span class="badge b-pend"><i class="ti ti-cloud-upload"></i> ${granelCola.length} evento${granelCola.length!==1?'s':''} por sincronizar</span>`
+    :`<span class="badge b-ok"><i class="ti ti-cloud-check"></i> Sincronizado</span>`;
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── BÁSCULA ENTRADA callbacks ──
+function beDesdeQR(uid){
+  activarModo('be','manual');   // cambia a manual para mostrar resultado
+  document.getElementById('be-id').value=uid;
+  beBuscar();
+}
+
+// ── DESPACHO callbacks ──
+function dDesdeQR(uid){
+  activarModo('d','manual');
+  document.getElementById('d-id').value=uid;
+  dBuscar();
+}
+
+// ── BÁSCULA SALIDA callbacks ──
+function bsDesdeQR(uid){
+  activarModo('bs','manual');
+  document.getElementById('bs-id').value=uid;
+  bsBuscar();
+}
+
+function geRenderResultado(row, desdeQR){
+  const uid=campo(row,'id'),rv=reg[uid];
+  const est=rv?rv.estado:'pendiente';
+  const el=document.getElementById('ge-result');
+
+  // BLOQUEO DOBLE INGRESO — mostrar antes que nada
+  if(rv?.tsGE && est!=='pendiente'){
+    el.innerHTML=`
+      <div class="alert a-err" style="font-size:12px;">
+        <i class="ti ti-lock" style="font-size:18px;flex-shrink:0;"></i>
+        <div>
+          <strong>INGRESO YA REGISTRADO</strong><br>
+          ${uid} ingresó a las <strong>${rv.tsGE}</strong>.<br>
+          Un QR es de un solo uso e intransferible.<br>
+          <span style="font-size:10px;opacity:.7;">Estado actual: ${estadoBadge(est)}</span>
+        </div>
+      </div>`;
+    if(desdeQR) audit('DOBLE INGRESO BLOQUEADO',uid,rv.chofer,rv.placa,'Intento escaneo reingreso — bloqueado');
+    return;
+  }
+
+  // Validaciones QR
+  let validMsg='',validClass='a-ok';
+  if(est==='completado'){
+    validMsg='<i class="ti ti-lock"></i> QR ya utilizado — Esta operación está cerrada';validClass='a-err';
+  } else if(!rv?.qrGenerado){
+    validMsg='<i class="ti ti-alert-triangle"></i> QR no generado para este viaje';validClass='a-warn';
+  } else {
+    validMsg=desdeQR
+      ?'<i class="ti ti-circle-check"></i> QR escaneado y verificado correctamente'
+      :'<i class="ti ti-circle-check"></i> ID verificado en planificación';
+  }
+  if(rv?.granel){
+    validMsg+=`<br><span style="font-size:11px;">🌾 Viaje de granel · ${esc(rv.origen||rv.areaCarga)} → planta · Viaje ${esc(rv.nViaje||'')}`+
+      `${rv.netoOrigenKg?' · Neto origen: <strong>'+Number(rv.netoOrigenKg).toLocaleString('es-EC')+' kg</strong>':''}</span>`;
+  }
+
+  el.innerHTML=`
+    <div class="alert ${validClass}" style="margin-bottom:10px;">${validMsg}</div>
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+        <div><div class="sl">ID ÚNICO</div><span class="mt" style="font-size:10px;">${uid}</span></div>
+        <div><div class="sl">PLACA</div><span class="mt">${campo(row,'placa')}</span></div>
+        <div><div class="sl">CHOFER</div><strong>${campo(row,'chofer')}</strong></div>
+        <div><div class="sl">TIPO CARRO</div>${campo(row,'tipo')}</div>
+        <div><div class="sl">DETALLE CARGA</div>${campo(row,'detalle')}</div>
+        <div><div class="sl">HORA PROG.</div><span class="mt">${campo(row,'hora')}</span></div>
+        <div><div class="sl">ÁREA CARGA</div>${campo(row,'areaCarga')}</div>
+        <div><div class="sl">ÁREA DESCARGA</div>${campo(row,'areaDesc')}</div>
+      </div>
+    </div>
+    ${est==='pendiente' && (rv?.qrGenerado||!desdeQR)
+      ?`<button class="btn btn-success" onclick="geAbrirModal('${uid}')" style="width:100%;font-size:13px;padding:10px;">
+          <i class="ti ti-login"></i> Autorizar ingreso a planta
+        </button>`:''}
+    ${est==='garita-entrada'?'<div class="alert a-info"><i class="ti ti-info-circle"></i> Ya registrado en garita — proceder a báscula de entrada</div>':''}
+    ${est==='completado'?'<div class="alert a-err"><i class="ti ti-lock"></i> Operación finalizada — QR no reutilizable</div>':''}
+    ${est==='pendiente'&&!rv?.qrGenerado&&desdeQR
+      ?`<div style="margin-top:8px;"><button class="btn btn-success" onclick="genQRSingle('${uid}');geAbrirModal('${uid}')" style="width:100%;">
+          <i class="ti ti-login"></i> Generar QR y autorizar ingreso
+        </button></div>`:''}
+  `;
+}
+
+function geAbrirModal(uid){
+  const rv=reg[uid];if(!rv)return;
+  modalData.uid=uid;
+  document.getElementById('m-ge-body').innerHTML=`
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;font-size:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div><div class="sl">ID ÚNICO</div><span class="mt" style="font-size:10px;">${uid}</span></div>
+        <div><div class="sl">PLACA</div><span class="mt">${rv.placa}</span></div>
+        <div><div class="sl">CHOFER</div><strong>${rv.chofer}</strong></div>
+        <div><div class="sl">TIPO</div>${rv.tipo}</div>
+        <div><div class="sl">DETALLE</div>${rv.detalle}</div>
+        <div><div class="sl">APROBACIÓN</div><span class="badge b-ok">${rv.apro}</span></div>
+      </div>
+    </div>
+    <div class="field"><span class="fl">Condición del vehículo</span>
+      <select id="ge-cond"><option value="vacio">Vacío</option><option value="lleno">Lleno</option></select>
+    </div>
+    <div class="field"><span class="fl">Tipo de operación</span>
+      <select id="ge-op"><option value="carga">Carga</option><option value="descarga">Descarga</option></select>
+    </div>
+    <div class="field"><span class="fl">Operador garita</span>
+      <input type="text" id="ge-oper" placeholder="Nombre del operador"/>
+    </div>
+    <div class="field"><span class="fl">Observaciones</span>
+      <textarea id="ge-obs" rows="2" placeholder="Estado del vehículo, documentos, etc."></textarea>
+    </div>`;
+  abrir('m-ge');
+}
+
+function geConfirmar(){
+  const uid=modalData.uid, rv=reg[uid]; if(!rv) return;
+  // BLOQUEO DOBLE INGRESO — validación crítica
+  if(rv.tsGE){
+    cerrar('m-ge');
+    const el=document.getElementById('ge-result');
+    if(el) el.innerHTML=`<div class="alert a-err" style="font-size:13px;">
+      <i class="ti ti-lock"></i>
+      <div><strong>INGRESO BLOQUEADO</strong><br>
+      Este vehículo ya registró ingreso a las <strong>${rv.tsGE}</strong>.<br>
+      Un QR es intransferible y de un solo uso.</div>
+    </div>`;
+    audit('DOBLE INGRESO BLOQUEADO',uid,rv.chofer,rv.placa,'Intento de reingreso — bloqueado por sistema');
+    return;
+  }
+  rv.tsGE=rv.tsIngreso=horaActual();
+  rv.condicion=document.getElementById('ge-cond')?.value||'vacio';
+  rv.operacion=document.getElementById('ge-op')?.value||'carga';
+  rv.operGE=document.getElementById('ge-oper')?.value||'Garita';
+  rv.obsEntrada=document.getElementById('ge-obs')?.value||'';
+  avanzar(uid,'garita-entrada');
+  granelEvento(uid,'ingreso');
+  addTL('ge-tl','#1D9E75','Ingreso: '+rv.chofer,rv.placa+' · '+rv.detalle);
+  addTL('dash-tl','#1D9E75','Ingreso garita: '+rv.chofer,rv.placa);
+  audit('Garita Entrada',uid,rv.chofer,rv.placa,'Ingreso autorizado · '+rv.condicion+' · '+rv.operacion);
+  cerrar('m-ge');
+  // Mostrar pase
+  paseActual=uid;mostrarPase(uid);
+}
+
+function renderGePend(){
+  const body=document.getElementById('ge-pend');if(!body)return;
+  const pend=planData.filter(r=>{const uid=campo(r,'id');return!reg[uid]||reg[uid].estado==='pendiente';});
+  if(!pend.length){body.innerHTML='<tr><td colspan="7" class="ec">Sin pendientes</td></tr>';return;}
+  body.innerHTML=pend.map(r=>{
+    const uid=campo(r,'id'),apro=campo(r,'apro'),rv=reg[uid];
+    return`<tr>
+      <td><span class="mt" style="font-size:10px;">${uid}</span></td>
+      <td>${campo(r,'chofer')}</td><td><span class="mt">${campo(r,'placa')}</span></td>
+      <td>${campo(r,'detalle')}</td>
+      <td><span class="mt">${campo(r,'hora')}</span></td>
+      <td>${apro.toLowerCase()==='ok'?'<span class="badge b-ok"><i class="ti ti-check"></i> OK</span>':'<span class="badge b-pend">'+apro+'</span>'}</td>
+      <td>
+        ${rv?.qrGenerado?'':`<button class="btn btn-sm btn-purple" onclick="genQRSingle('${uid}')"><i class="ti ti-qrcode"></i></button>`}
+        <button class="btn btn-success btn-sm" onclick="geAbrirModal('${uid}')"><i class="ti ti-login"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// BÁSCULA ENTRADA
+// ══════════════════════════════════════════════════════════
+let beUID=null;
+function beBuscar(){
+  const id=document.getElementById('be-id').value.trim().toUpperCase();
+  const rv=reg[id],el=document.getElementById('be-info');
+  const pw=document.getElementById('be-peso-wrap');
+  beUID=null; if(pw) pw.style.display='none';
+  if(!rv){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado — verifique o use el escáner</div>';return;}
+  if(rv.estado==='pendiente'){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Vehículo aún no ha pasado por garita de entrada</div>';return;}
+  if(rv.peBruto){el.innerHTML=`<div class="alert a-info"><i class="ti ti-info-circle"></i> Peso de entrada ya registrado: <strong>${rv.peBruto.toLocaleString('es-EC')} kg</strong> a las ${rv.tsBE}</div>`;return;}
+  beUID=id;
+  el.innerHTML=`<div class="alert a-ok"><i class="ti ti-check"></i> <strong>${id}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span> · ${rv.detalle}</div>`;
+  if(pw){ pw.style.display='block'; document.getElementById('be-peso').value=''; document.getElementById('be-display').textContent='— kg'; document.getElementById('be-peso').focus(); }
+}
+function beDisplay(){
+  const v=parseFloat(document.getElementById('be-peso').value)||0;
+  document.getElementById('be-display').textContent=v>0?v.toLocaleString('es-EC')+' kg':'— kg';
+}
+function beRegistrar(){
+  if(!beUID){msg('be-msg','warn','Busque y seleccione un ID primero');return;}
+  const p=parseFloat(document.getElementById('be-peso').value);
+  if(isNaN(p)||p<=0){msg('be-msg','warn','Ingrese un peso válido');return;}
+  const rv=reg[beUID];rv.peBruto=p;rv.tsBE=horaActual();
+  avanzar(beUID,'bascula-entrada');
+  granelEvento(beUID,'pesaje_lleno',{brutoKg:p});
+  renderBeTabla();
+  document.getElementById('be-id').value='';document.getElementById('be-peso').value='';
+  document.getElementById('be-info').innerHTML='';document.getElementById('be-display').textContent='— kg';
+  const pw=document.getElementById('be-peso-wrap');if(pw)pw.style.display='none';
+  audit('Báscula Entrada',beUID,rv.chofer,rv.placa,p+' kg bruto');
+  msg('be-msg','ok','Peso registrado: '+p.toLocaleString('es-EC')+' kg — Listo para despacho');
+  beUID=null;
+}
+function renderBeTabla(){
+  const body=document.getElementById('be-tabla');if(!body)return;
+  const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.peBruto);
+  if(!items.length){body.innerHTML='<tr><td colspan="5" class="ec">Sin registros</td></tr>';return;}
+  body.innerHTML=items.map(r=>`<tr>
+    <td><span class="mt" style="font-size:10px;">${r.uid}</span></td>
+    <td>${r.chofer}</td><td><span class="mt">${r.placa}</span></td>
+    <td style="font-weight:600;font-family:var(--mono);">${r.peBruto.toLocaleString('es-EC')} kg</td>
+    <td><span class="mt">${r.tsBE||'—'}</span></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// DESPACHO
+// ══════════════════════════════════════════════════════════
+function dBuscar(){
+  const id=document.getElementById('d-id').value.trim().toUpperCase();
+  const rv=reg[id],el=document.getElementById('d-info');
+  if(!rv||!rv.peBruto){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado o sin peso de entrada registrado</div>';return;}
+  const est=rv.estado;
+  const info=`<div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;font-size:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      <div><div class="sl">ID</div><span class="mt" style="font-size:10px;">${id}</span></div>
+      <div><div class="sl">ESTADO</div>${estadoBadge(est)}</div>
+      <div><div class="sl">CHOFER</div><strong>${rv.chofer}</strong></div>
+      <div><div class="sl">PLACA</div><span class="mt">${rv.placa}</span></div>
+      <div><div class="sl">DETALLE</div>${rv.detalle}</div>
+      <div><div class="sl">PESO ENTRADA</div><span style="font-family:var(--mono);font-weight:600;">${rv.peBruto.toLocaleString('es-EC')} kg</span></div>
+    </div>
+  </div>`;
+  if(['despacho','cargando'].includes(est)){
+    const cr=cronos[id],cid='crono-'+id.replace(/[^a-z0-9]/gi,'_');
+    const t=cr?fmtCrono(cr.elapsed+(cr.running?Date.now()-cr.start:0)):'00:00:00';
+    if(cr&&cr.running){clearInterval(cr._intd);cr._intd=setInterval(()=>{const e=document.getElementById(cid);if(e)e.textContent=fmtCrono(cr.elapsed+Date.now()-cr.start);},1000);}
+    el.innerHTML=info+`
+      <div class="alert a-info" style="margin-bottom:10px;"><i class="ti ti-building-warehouse"></i> Andén <strong>${rv.anden||'—'}</strong> · Despachador: <strong>${rv.despachador||'—'}</strong></div>
+      <div class="crono ${cr?.running?'run':'stop'}" id="${cid}" style="margin-bottom:10px;">${t}</div>
+      <div style="display:flex;gap:6px;">
+        ${est==='despacho'?`<button class="btn btn-success" onclick="dIniciar('${id}')" style="flex:1;"><i class="ti ti-player-play"></i> Iniciar carga</button>`:''}
+        ${est==='cargando'?`<button class="btn btn-danger" onclick="dFinalizar('${id}')" style="flex:1;"><i class="ti ti-player-stop"></i> Finalizar carga</button>`:''}
+      </div>`;
+  } else {
+    el.innerHTML=info+`<button class="btn btn-primary" onclick="dAbrirConfig('${id}')" style="width:100%;"><i class="ti ti-building-warehouse"></i> Configurar despacho</button>`;
+  }
+}
+function dAbrirConfig(uid){
+  const rv=reg[uid]; modalData.uid=uid;
+  // Granel se descarga en volteador/silos (regla ALMACENERA)
+  const sugeridos=sugerirAndenes(rv.granel?'ALMACENERA':rv.areaCarga);
+  renderAndenes(sugeridos);
+  const libres=andenes.filter(a=>a.libre);
+  const makeOpt=a=>{const s=sugeridos.includes(a.id);return`<option value="${a.id}"${s?' selected':''}>${a.nombre}${s?' ★':''}</option>`;};
+  document.getElementById('m-desp-body').innerHTML=`
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.75rem;margin-bottom:10px;font-size:12px;">
+      <strong>${uid}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span>
+      <div style="margin-top:3px;color:var(--tx2);">Área carga: <strong>${rv.areaCarga||'—'}</strong></div>
+    </div>
+    ${sugeridos.length?`<div class="alert a-info" style="margin-bottom:10px;font-size:11px;">
+      <i class="ti ti-sparkles"></i> Áreas sugeridas: <strong>${sugeridos.map(id=>andenes.find(a=>a.id===id)?.nombre||id).join(' · ')}</strong>
+    </div>`:''}
+    <div class="field"><span class="fl">Área / Andén asignado</span>
+      <select id="d-anden" style="width:100%;" onchange="document.getElementById('d-anden-manual-wrap').style.display=this.value==='__manual__'?'block':'none'">
+        <option value="">— Seleccione área —</option>
+        ${libres.map(makeOpt).join('')}
+        <option value="__manual__">Otro (escribir manualmente)</option>
+      </select>
+    </div>
+    <div class="field" id="d-anden-manual-wrap" style="display:none;">
+      <span class="fl">Ubicación manual</span>
+      <input type="text" id="d-anden-manual" placeholder="Ej: Zona Norte, Patio Exterior…"/>
+    </div>
+    <div class="field"><span class="fl">Despachador responsable</span>
+      <input type="text" id="d-desp" placeholder="Nombre del despachador"/>
+    </div>
+    <div class="field"><span class="fl">Documentos entregados</span>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="d-docs" value="si" checked/> Sí, entregados</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="d-docs" value="no"/> No entregados</label>
+      </div>
+    </div>
+    <div class="field"><span class="fl">Observaciones</span>
+      <textarea id="d-obs" rows="2" placeholder="Notas adicionales"></textarea>
+    </div>`;
+  document.getElementById('m-desp-actions').innerHTML=`
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-success" onclick="dConfigurar()" style="flex:1;"><i class="ti ti-check"></i> Confirmar despacho</button>
+      <button class="btn" onclick="cerrar('m-desp')" style="flex:1;">Cancelar</button>
+    </div>`;
+  abrir('m-desp');
+}
+
+function dConfigurar(){
+  const uid=modalData.uid, rv=reg[uid]; if(!rv) return;
+  const sel=document.getElementById('d-anden');
+  const isManual=sel?.value==='__manual__';
+  const aid=isManual?'manual':sel?.value;
+  const andenNombre=isManual
+    ?(document.getElementById('d-anden-manual')?.value||'Manual')
+    :(andenes.find(a=>a.id===aid)?.nombre||aid);
+  const desp=document.getElementById('d-desp')?.value.trim()||'Sin asignar';
+  const docs=document.querySelector('input[name="d-docs"]:checked')?.value==='si';
+  rv.anden=andenNombre; rv.andenId=aid;
+  rv.despachador=desp; rv.docs=docs;
+  rv.obsDesp=document.getElementById('d-obs')?.value||'';
+  rv.tsDesp=horaActual();
+  // Marcar andén ocupado si es área configurada
+  if(!isManual){ const a=andenes.find(x=>x.id===aid);if(a){a.libre=false;a.uid=uid;a.lbl=rv.placa;} }
+  DB.guardarAndenes();   // ← persiste estado de andenes
+  avanzar(uid,'despacho');
+  audit('Despacho',uid,rv.chofer,rv.placa,andenNombre+' · '+desp+(docs?' · Docs OK':' · Sin docs'));
+  cerrar('m-desp');
+  // Notif WA al conductor
+  const tel=rv.tel?rv.tel.replace(/\D/g,''):'';
+  const waMsg=`🏭 *AGRIPAC S.A. — Asignación de área*\n\n📦 ${rv.detalle}\n🏗 *Área: ${andenNombre}*\n👷 Despachador: ${desp}\n🚛 Diríjase al área asignada\n\n_${fmtFecha(fechaSel)}_`;
+  if(tel) window.open('https://wa.me/593'+tel.slice(-9)+`?text=${encodeURIComponent(waMsg)}`,'_blank');
+  document.getElementById('d-id').value=''; document.getElementById('d-info').innerHTML='';
+  renderCargasActivas(); renderAndenes();
+}
+
+function dIniciar(uid){
+  const rv=reg[uid];
+  cronos[uid]={start:Date.now(),elapsed:0,running:true};
+  rv.tsIniC=horaActual();
+  avanzar(uid,'cargando');
+  audit('Despacho',uid,rv.chofer,rv.placa,'Inicio de carga · andén '+rv.anden);
+  renderCargasActivas();
+  document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
+}
+function dFinalizar(uid){
+  const rv=reg[uid],cr=cronos[uid];
+  if(cr){clearInterval(cr._int);clearInterval(cr._intd);cr.elapsed+=Date.now()-cr.start;cr.running=false;}
+  rv.tsFinC=horaActual();rv.tiempoC=cr?fmtCrono(cr.elapsed):'—';
+  const a=andenes.find(x=>x.uid===uid);if(a){a.libre=true;a.uid=null;a.lbl='';}
+  DB.guardarAndenes();   // ← persiste estado de andenes
+  avanzar(uid,'bascula-salida');
+  audit('Despacho',uid,rv.chofer,rv.placa,'Fin carga · tiempo: '+rv.tiempoC);
+  renderCargasActivas();renderAndenes();
+  document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
+}
+function renderCargasActivas(){
+  const body=document.getElementById('d-activos');if(!body)return;
+  const activos=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&['despacho','cargando'].includes(r.estado));
+  if(!activos.length){body.innerHTML='<tr><td colspan="10" class="ec">Sin cargas activas</td></tr>';return;}
+  body.innerHTML=activos.map(rv=>{
+    const cr=cronos[rv.uid],cid='ct-'+rv.uid.replace(/[^a-z0-9]/gi,'_');
+    const t=cr?fmtCrono(cr.elapsed+(cr.running?Date.now()-cr.start:0)):'—';
+    if(cr&&cr.running){clearInterval(cr._int);cr._int=setInterval(()=>{const e=document.getElementById(cid);if(e)e.textContent=fmtCrono(cr.elapsed+Date.now()-cr.start);},1000);}
+    const ac=rv.estado==='despacho'?`<button class="btn btn-success btn-sm" onclick="dIniciar('${rv.uid}')"><i class="ti ti-player-play"></i></button>`:
+      `<button class="btn btn-danger btn-sm" onclick="dFinalizar('${rv.uid}')"><i class="ti ti-player-stop"></i></button>`;
+    return`<tr>
+      <td><span class="mt" style="font-size:10px;">${rv.uid}</span></td>
+      <td>${rv.chofer}</td><td><span class="mt">${rv.placa}</span></td><td>${rv.detalle}</td>
+      <td><span class="badge b-desp">${rv.anden||'—'}</span></td>
+      <td>${rv.despachador||'—'}</td>
+      <td>${rv.docs?'<span class="badge b-ok"><i class="ti ti-check"></i> OK</span>':'<span class="badge b-pend">Pend.</span>'}</td>
+      <td><span id="${cid}" style="font-family:var(--mono);font-size:11px;">${t}</span></td>
+      <td>${estadoBadge(rv.estado)}</td><td>${ac}</td>
+    </tr>`;
+  }).join('');
+}
+function renderAndenes(sugeridos=[]){
+  const grid=document.getElementById('andenes-grid');if(!grid)return;
+  // Agrupar por grupo
+  const grupos={patio:'Patio',proceso:'Proceso',bodega:'Bodegas',anden:'Andenes',especial:'Especial'};
+  const byGrupo={};
+  andenes.forEach(a=>{ if(!byGrupo[a.grupo]) byGrupo[a.grupo]=[]; byGrupo[a.grupo].push(a); });
+  let html='';
+  Object.entries(byGrupo).forEach(([g,items])=>{
+    html+=`<div style="grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-top:8px;margin-bottom:2px;">${grupos[g]||g}</div>`;
+    items.forEach(a=>{
+      const isSug=sugeridos.includes(a.id);
+      const crono=cronos[a.uid];
+      const cls=a.libre?(isSug?'libre sugerido':'libre'):crono?.running?'cargando':'ocupado';
+      const sugBadge=isSug&&a.libre?'<div style="font-size:9px;color:var(--grt);font-weight:600;">★ Sugerido</div>':'';
+      html+=`<div class="anden ${cls}" onclick="clickAnden('${a.id}')" title="${a.nombre}">
+        <div class="anden-num" style="font-size:11px;">${a.nombre.split(' ')[0]}<br><span style="font-size:9px;opacity:.7;">${a.nombre.split(' ').slice(1).join(' ')}</span></div>
+        <div class="anden-icon">${a.libre?'<i class="ti ti-parking"></i>':crono?.running?'<i class="ti ti-loader"></i>':'<i class="ti ti-truck"></i>'}</div>
+        <div class="anden-sub">${a.libre?'Libre':(a.lbl||'Ocupado')}</div>
+        ${sugBadge}
+      </div>`;
+    });
+  });
+  grid.innerHTML=html;
+  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;';
+  // Actualizar dashboard también
+  const dg=document.getElementById('dash-andenes');
+  if(dg) dg.innerHTML=andenes.filter(a=>!a.libre).map(a=>`<div class="anden ocupado">
+    <div class="anden-num" style="font-size:11px;">${a.nombre}</div>
+    <div class="anden-icon"><i class="ti ti-truck"></i></div>
+    <div class="anden-sub">${a.lbl||'Ocupado'}</div>
+  </div>`).join('')||'<div style="font-size:12px;color:var(--tx3);padding:.5rem;">Todos los andenes libres</div>';
+}
+function clickAnden(id){
+  const a=andenes.find(x=>x.id===id);
+  if(a&&!a.libre&&confirm('¿Liberar '+a.nombre+'?')){
+    a.libre=true;a.uid=null;a.lbl='';
+    DB.guardarAndenes();   // ← persiste la liberación manual
+    renderAndenes();renderCargasActivas();
+  }
+}
+function agregarAnden(){
+  // No se puede agregar — la infraestructura está fija en AREAS_CONFIG
+  alert('La infraestructura está definida en AREAS_CONFIG. Edita esa constante para agregar áreas.');
+}
+function fmtCrono(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);return pad(h)+':'+pad(m%60)+':'+pad(s%60);}
+
+// ══════════════════════════════════════════════════════════
+// BÁSCULA SALIDA
+// ══════════════════════════════════════════════════════════
+let bsUID=null;
+function bsBuscar(){
+  const id=document.getElementById('bs-id').value.trim().toUpperCase();
+  const rv=reg[id],el=document.getElementById('bs-info');
+  const pw=document.getElementById('bs-peso-wrap');
+  bsUID=null; if(pw) pw.style.display='none';
+  if(!rv||!rv.peBruto){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado o sin peso de entrada registrado</div>';return;}
+  if(!['bascula-salida','garita-salida'].includes(rv.estado)){el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> Vehículo aún no completó la carga en despacho</div>';return;}
+  if(rv.peSalida){el.innerHTML=`<div class="alert a-info"><i class="ti ti-info-circle"></i> Peso de salida ya registrado: <strong>${rv.peSalida.toLocaleString('es-EC')} kg</strong> a las ${rv.tsBS}</div>`;return;}
+  bsUID=id;
+  el.innerHTML=`<div class="alert a-ok"><i class="ti ti-check"></i> <strong>${id}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span> · ${rv.detalle}</div>`;
+  document.getElementById('bs-ent').textContent=rv.peBruto.toLocaleString('es-EC')+' kg';
+  document.getElementById('bs-sal').textContent='—';
+  document.getElementById('bs-net').textContent='—';
+  if(pw){ pw.style.display='block'; document.getElementById('bs-peso').value=''; document.getElementById('bs-peso').focus(); }
+}
+function bsCalc(){
+  const v=parseFloat(document.getElementById('bs-peso').value)||0;
+  document.getElementById('bs-sal').textContent=v>0?v.toLocaleString('es-EC')+' kg':'—';
+  if(bsUID&&reg[bsUID]&&v>0){
+    const neto=reg[bsUID].peBruto-v;
+    document.getElementById('bs-net').textContent=neto.toLocaleString('es-EC')+' kg';
+  }else document.getElementById('bs-net').textContent='—';
+}
+function bsRegistrar(){
+  if(!bsUID){msg('bs-msg','warn','Busque un ID primero');return;}
+  const p=parseFloat(document.getElementById('bs-peso').value);
+  if(isNaN(p)||p<=0){msg('bs-msg','warn','Ingrese peso válido');return;}
+  const rv=reg[bsUID];rv.peSalida=p;rv.peNeto=rv.peBruto-p;rv.tsBS=horaActual();
+  avanzar(bsUID,'garita-salida');
+  granelEvento(bsUID,'pesaje_vacio',{netoKg:rv.peNeto});
+  renderBsTabla();calcMetrics();
+  audit('Báscula Salida',bsUID,rv.chofer,rv.placa,p+' kg tara · Neto: '+rv.peNeto+' kg');
+  document.getElementById('bs-id').value='';document.getElementById('bs-peso').value='';
+  document.getElementById('bs-info').innerHTML='';
+  const pw=document.getElementById('bs-peso-wrap');if(pw)pw.style.display='none';
+  ['bs-ent','bs-sal','bs-net'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  bsUID=null;
+  msg('bs-msg','ok','Peso registrado — listo para garita de salida');
+}
+function renderBsTabla(){
+  const body=document.getElementById('bs-tabla');if(!body)return;
+  const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.peSalida);
+  if(!items.length){body.innerHTML='<tr><td colspan="6" class="ec">Sin registros</td></tr>';return;}
+  body.innerHTML=items.map(r=>`<tr>
+    <td><span class="mt" style="font-size:10px;">${r.uid}</span></td>
+    <td><span class="mt">${r.placa}</span></td>
+    <td style="font-family:var(--mono);font-size:11px;">${r.peBruto?.toLocaleString('es-EC')}</td>
+    <td style="font-family:var(--mono);font-size:11px;">${r.peSalida?.toLocaleString('es-EC')}</td>
+    <td style="font-weight:600;font-family:var(--mono);color:var(--gr);">${r.peNeto?.toLocaleString('es-EC')}</td>
+    <td><span class="mt">${r.tsBS||'—'}</span></td>
+  </tr>`).join('');
+  const tot=items.reduce((s,r)=>s+(r.peNeto||0),0);
+  const el=document.getElementById('bs-total');if(el)el.textContent=tot.toLocaleString('es-EC')+' kg';
+}
+
+// ══════════════════════════════════════════════════════════
+// GARITA SALIDA
+// ══════════════════════════════════════════════════════════
+// ── GARITA SALIDA — callback desde scanner ──
+function gsDesdeQR(uid){
+  activarModo('gs','manual');
+  const inp=document.getElementById('gs-id');
+  if(inp) inp.value=uid;
+  gsBuscar();
+}
+
+let gsUID=null;
+function gsBuscar(){
+  const id=document.getElementById('gs-id')?.value.trim().toUpperCase()||'';
+  const rv=reg[id], el=document.getElementById('gs-info');
+  gsUID=null;
+  if(!id){el.innerHTML='';return;}
+  if(!rv){
+    el.innerHTML='<div class="alert a-warn"><i class="ti ti-alert-triangle"></i> ID no encontrado en la planificación</div>';return;
+  }
+  if(!rv.peSalida){
+    el.innerHTML='<div class="alert a-err"><i class="ti ti-alert-triangle"></i> Sin peso de salida registrado — debe pasar primero por Báscula Salida</div>';return;
+  }
+  if(!['bascula-salida','garita-salida','completado'].includes(rv.estado)){
+    el.innerHTML='<div class="alert a-err"><i class="ti ti-alert-triangle"></i> Despacho aún no completado — estado actual: '+estadoBadge(rv.estado)+'</div>';return;
+  }
+  if(rv.estado==='completado'){
+    el.innerHTML='<div class="alert a-err"><i class="ti ti-lock"></i> <strong>Vehículo ya registró salida</strong> a las '+rv.tsGS+' — QR finalizado e intransferible</div>';
+    audit('DOBLE SALIDA BLOQUEADA',id,rv.chofer,rv.placa,'Intento de doble salida — bloqueado');
+    return;
+  }
+  gsUID=id;
+  el.innerHTML=`
+    <div class="alert a-ok" style="margin-bottom:10px;"><i class="ti ti-check"></i> Listo para autorización de salida</div>
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;font-size:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div><div class="sl">ID ÚNICO</div><span class="mt" style="font-size:10px;">${id}</span></div>
+        <div><div class="sl">PLACA</div><span class="mt">${rv.placa}</span></div>
+        <div><div class="sl">CHOFER</div><strong>${rv.chofer}</strong></div>
+        <div><div class="sl">DETALLE</div>${rv.detalle}</div>
+        <div><div class="sl">PESO NETO</div><span style="font-family:var(--mono);font-weight:600;color:var(--gr);">${(rv.peNeto||0).toLocaleString('es-EC')} kg</span></div>
+        <div><div class="sl">TIEMPO CARGA</div><span class="mt">${rv.tiempoC||'—'}</span></div>
+        <div><div class="sl">DESPACHADOR</div>${rv.despachador||'—'}</div>
+        <div><div class="sl">ANDÉN</div>${rv.anden||'—'}</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="gsAbrirModal('${id}')" style="width:100%;padding:10px;font-size:13px;">
+      <i class="ti ti-shield-check"></i> Completar autorización de salida
+    </button>`;
+}
+
+function gsAbrirModal(uid){
+  const rv=reg[uid]; if(!rv) return;
+  modalData.uid=uid;
+  document.getElementById('m-gs-body').innerHTML=`
+    <div style="background:var(--sf2);border-radius:var(--r);padding:.75rem;margin-bottom:10px;font-size:12px;">
+      <strong>${uid}</strong> · ${rv.chofer} · <span class="mt">${rv.placa}</span> ·
+      <strong style="color:var(--gr);">${(rv.peNeto||0).toLocaleString('es-EC')} kg neto</strong>
+    </div>
+    <div class="field"><span class="fl">Números de precintos de seguridad</span>
+      <input type="text" id="gs-prec" placeholder="Ej: PR-001, PR-002"/>
+    </div>
+    <div class="field"><span class="fl">Guías de remisión</span>
+      <input type="text" id="gs-guias" placeholder="Ej: GR-2025-001"/>
+    </div>
+    <div class="field"><span class="fl">¿Documentos de salida verificados?</span>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="gs-docs" value="si" checked/> Sí, verificados</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="radio" name="gs-docs" value="no"/> No verificados</label>
+      </div>
+    </div>
+    <div class="field"><span class="fl">Foto precinto / carro vacío</span>
+      <div class="foto-area" onclick="document.getElementById('gs-foto-input').click()">
+        <i class="ti ti-camera" style="font-size:22px;color:var(--tx3);"></i>
+        <div style="font-size:12px;color:var(--tx3);margin-top:6px;">Toca para capturar foto</div>
+        <img id="gs-foto-prev" class="foto-preview" alt="Foto precinto"/>
+      </div>
+      <input type="file" id="gs-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="gsFoto(this)"/>
+    </div>
+    <div class="field"><span class="fl">Operador garita salida</span>
+      <input type="text" id="gs-oper" placeholder="Nombre del operador"/>
+    </div>
+    <div class="field"><span class="fl">Observaciones de salida</span>
+      <textarea id="gs-obs" rows="2" placeholder="Notas de salida"></textarea>
+    </div>`;
+  abrir('m-gs');
+}
+
+function gsFoto(input){
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{const img=document.getElementById('gs-foto-prev');img.src=e.target.result;img.style.display='block';};
+  r.readAsDataURL(f);
+}
+
+function gsConfirmar(){
+  const uid=modalData.uid, rv=reg[uid]; if(!rv) return;
+  rv.precintos=document.getElementById('gs-prec')?.value||'—';
+  rv.guias=document.getElementById('gs-guias')?.value||'—';
+  rv.autorizadoPor=document.getElementById('gs-oper')?.value||'Garita';
+  rv.obsSal=document.getElementById('gs-obs')?.value||'';
+  rv.tsGS=horaActual();
+  const fp=document.getElementById('gs-foto-prev');
+  rv.foto=fp?.style.display!=='none'?fp?.src:null;
+  avanzar(uid,'completado');
+  granelEvento(uid,'salida');
+  addTL('gs-tl','#1D9E75','Salida autorizada: '+rv.chofer,rv.placa+' · Guías: '+rv.guias);
+  addTL('dash-tl','#D85A30','Salida: '+rv.chofer,rv.placa+' · '+(rv.peNeto||0).toLocaleString('es-EC')+' kg neto');
+  audit('Garita Salida',uid,rv.chofer,rv.placa,'Salida autorizada · Prec: '+rv.precintos+' · Guías: '+rv.guias);
+  cerrar('m-gs'); gsUID=null;
+  renderGsTabla();
+  const inp=document.getElementById('gs-id'); if(inp) inp.value='';
+  document.getElementById('gs-info').innerHTML='';
+}
+
+function renderGsTabla(){
+  const body=document.getElementById('gs-tabla');if(!body)return;
+  const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.estado==='completado');
+  if(!items.length){body.innerHTML='<tr><td colspan="9" class="ec">Sin salidas</td></tr>';return;}
+  body.innerHTML=items.map(r=>{
+    let tiempoTotal='—';
+    if(r.tsIngreso&&r.tsGS){
+      const[hi,mi]=r.tsIngreso.split(':').map(Number),[hs,ms]=r.tsGS.split(':').map(Number);
+      const min=(hs*60+ms)-(hi*60+mi);
+      if(min>=0)tiempoTotal=min+'m';
+    }
+    return`<tr>
+      <td><span class="mt" style="font-size:10px;">${r.uid}</span></td>
+      <td>${r.chofer}</td><td><span class="mt">${r.placa}</span></td>
+      <td style="font-size:11px;">${r.precintos||'—'}</td>
+      <td style="font-size:11px;">${r.guias||'—'}</td>
+      <td style="font-weight:600;font-family:var(--mono);color:var(--gr);">${(r.peNeto||0).toLocaleString('es-EC')} kg</td>
+      <td style="font-family:var(--mono);font-size:11px;">${tiempoTotal}</td>
+      <td><span class="mt">${r.tsGS||'—'}</span></td>
+      <td style="font-size:11px;color:var(--tx2);">${r.autorizadoPor||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// PASE MODAL
+// ══════════════════════════════════════════════════════════
+function mostrarPase(uid){
+  const rv=reg[uid];if(!rv)return;
+  const fields=[
+    ['ID Único',uid],['Chofer',rv.chofer],['Placa',rv.placa],
+    ['Tipo carro',rv.tipo],['Detalle',rv.detalle],
+    ['Área carga',rv.areaCarga],['Área descarga',rv.areaDesc],
+    ['Hora programada',rv.hora],['Hora ingreso',horaActual()],
+    ['Fecha',fmtFecha(fechaSel)]
+  ];
+  document.getElementById('pase-rows').innerHTML=fields.map(([k,v])=>`<div class="pase-row"><span>${k}</span><span>${v||'—'}</span></div>`).join('');
+  // QR en pase — canvas con logo
+  const qrEl=document.getElementById('pase-qr-canvas');
+  qrEl.innerHTML='<div style="font-size:10px;color:var(--tx3);padding:.5rem;">Generando…</div>';
+  dibujarQRconLogo(qrEl, uid, 130).then(()=>{
+    // Texto copiable bajo el QR del pase
+    let tc=document.getElementById('pase-qr-text');
+    if(!tc){ tc=document.createElement('div'); tc.id='pase-qr-text'; qrEl.parentNode.insertBefore(tc,qrEl.nextSibling); }
+    tc.innerHTML=`<div class="qr-id-text" onclick="copiarTexto('${uid}',this)" style="margin-top:8px;">${uid}</div>`;
+  });
+  abrir('m-pase');
+}
+function paseWA(){
+  if(!paseActual)return;
+  const rv=reg[paseActual];if(!rv)return;
+  enviarWAQR(paseActual);cerrar('m-pase');
+}
+
+// ══════════════════════════════════════════════════════════
+// REPORTES
+// ══════════════════════════════════════════════════════════
+function renderReportes(){
+  // Tiempo promedio en planta
+  const completados=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.estado==='completado'&&r.tsIngreso&&r.tsGS);
+  if(completados.length){
+    const promedioMin=completados.map(r=>{
+      const[hi,mi]=r.tsIngreso.split(':').map(Number),[hs,ms]=r.tsGS.split(':').map(Number);
+      return Math.max(0,(hs*60+ms)-(hi*60+mi));
+    });
+    const prom=Math.round(promedioMin.reduce((s,m)=>s+m,0)/promedioMin.length);
+    const el=document.getElementById('r-tprom');if(el)el.textContent=prom;
+  }
+  // Tiempo prom carga
+  const conCarga=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.tiempoC&&r.tiempoC!=='—');
+  if(conCarga.length){
+    const el=document.getElementById('r-tcarga');
+    const promC=Math.round(conCarga.map(r=>{const[h,m,s]=r.tiempoC.split(':').map(Number);return h*60+m+s/60;}).reduce((a,b)=>a+b,0)/conCarga.length);
+    if(el)el.textContent=promC;
+  }
+  // Productividad andenes
+  const opHoy=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.anden).length;
+  const el2=document.getElementById('r-andprod');if(el2)el2.textContent=andenes.length>0?Math.round(opHoy/andenes.length*10)/10:'—';
+  // Productividad por despachador
+  const despMap={};
+  planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.despachador).forEach(r=>{
+    if(!despMap[r.despachador])despMap[r.despachador]={ops:0,kg:0,ts:[]};
+    despMap[r.despachador].ops++;
+    despMap[r.despachador].kg+=(r.peNeto||0);
+    if(r.tiempoC&&r.tiempoC!=='—'){const[h,m,s]=r.tiempoC.split(':').map(Number);despMap[r.despachador].ts.push(h*60+m+s/60);}
+  });
+  const dtBody=document.getElementById('r-desp-tabla');if(dtBody){
+    const entries=Object.entries(despMap);
+    dtBody.innerHTML=entries.length?entries.map(([d,v])=>`<tr>
+      <td>${d}</td><td style="font-family:var(--mono);">${v.ops}</td>
+      <td style="font-family:var(--mono);">${v.ts.length?Math.round(v.ts.reduce((a,b)=>a+b,0)/v.ts.length)+'m':'—'}</td>
+      <td style="font-family:var(--mono);">${v.kg.toLocaleString('es-EC')} kg</td>
+    </tr>`).join(''):'<tr><td colspan="4" class="ec">Sin datos</td></tr>';
+  }
+  renderRptConductor();renderBarChart();
+}
+function renderRptConductor(){
+  const body=document.getElementById('r-cond-tabla');if(!body)return;
+  const q=(document.getElementById('r-cond-filter')?.value||'').toLowerCase();
+  const map={};
+  planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.chofer).forEach(r=>{
+    const k=r.chofer+'|'+r.placa;
+    if(!map[k])map[k]={chofer:r.chofer,placa:r.placa,viajes:0,kg:0,ultimo:null};
+    map[k].viajes++;map[k].kg+=(r.peNeto||0);
+    if(!map[k].ultimo||r.tsIngreso>map[k].ultimo)map[k].ultimo=r.tsIngreso;
+  });
+  const entries=Object.values(map).filter(v=>!q||v.chofer.toLowerCase().includes(q)||v.placa.toLowerCase().includes(q));
+  body.innerHTML=entries.length?entries.map(v=>`<tr>
+    <td>${v.chofer}</td><td><span class="mt">${v.placa}</span></td>
+    <td style="font-family:var(--mono);">${v.viajes}</td>
+    <td><span class="mt">${v.ultimo||'—'}</span></td>
+    <td style="font-family:var(--mono);">${v.kg.toLocaleString('es-EC')} kg</td>
+  </tr>`).join(''):'<tr><td colspan="5" class="ec">Sin datos</td></tr>';
+}
+function renderBarChart(){
+  const el=document.getElementById('r-barchart');if(!el)return;
+  const bins=Array(12).fill(0);
+  auditoria.filter(a=>a.modulo==='Garita Entrada').forEach(a=>{
+    const h=parseInt((a.ts||'0:0').split(':')[0]);
+    const idx=Math.floor((h-6)/0.5);if(idx>=0&&idx<12)bins[idx]++;
+  });
+  const maxV=Math.max(...bins,1);
+  el.innerHTML=bins.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;">
+    <div class="bar" style="width:100%;height:${Math.max(4,Math.round(v/maxV*72))}px;" title="${v} operaciones"></div>
+  </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// AUDITORÍA
+// ══════════════════════════════════════════════════════════
+function audit(modulo,uid,chofer,placa,detalle){
+  const entry={ts:new Date().toLocaleTimeString('es-EC'),fecha:fmtFecha(fechaSel),modulo,uid,chofer,placa,detalle,usuario:currentUser?.nombre||'Sistema'};
+  auditoria.unshift(entry);renderAud();
+  DB.audit(modulo,uid,chofer,placa,detalle);   // ← persiste en Firestore
+  addTL('dash-tl',modulo==='Garita Salida'?'#D85A30':modulo==='Garita Entrada'?'#1D9E75':'#BA7517',modulo+': '+chofer,placa+(detalle?' · '+detalle.slice(0,30):''));
+}
+function renderAud(){
+  const body=document.getElementById('aud-body');if(!body)return;
+  const q=(document.getElementById('aud-q')?.value||'').toLowerCase();
+  const f=auditoria.filter(a=>!q||[a.modulo,a.uid,a.chofer,a.placa,a.detalle].join(' ').toLowerCase().includes(q));
+  if(!f.length){body.innerHTML='<tr><td colspan="8" class="ec">Sin registros</td></tr>';return;}
+  const clrs={'Garita Entrada':'b-garita','Báscula Entrada':'b-bascula','Despacho':'b-desp','Báscula Salida':'b-bascula','Garita Salida':'b-salida','QR':'b-pend','WhatsApp':'b-ok'};
+  body.innerHTML=f.map(a=>`<tr>
+    <td style="font-family:var(--mono);font-size:10px;">${a.ts}</td>
+    <td><span class="badge ${clrs[a.modulo]||'b-pend'}" style="font-size:10px;">${a.modulo}</span></td>
+    <td><span class="mt" style="font-size:10px;">${a.uid}</span></td>
+    <td style="font-size:11px;">${a.chofer}</td>
+    <td><span class="mt">${a.placa}</span></td>
+    <td style="font-size:11px;color:var(--tx2);">${a.detalle}</td>
+    <td style="font-size:11px;color:var(--tx3);">${a.usuario}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPORTAR CSV
+// ══════════════════════════════════════════════════════════
+function exportarCSV(tipo){
+  let rows,name;
+  if(tipo==='historial'){
+    rows=[['Timestamp','Módulo','ID Único','Chofer','Placa','Detalle'],...auditoria.map(a=>[a.ts,a.modulo,a.uid,a.chofer,a.placa,a.detalle])];
+    name='historial';
+  }else if(tipo==='pesos'){
+    const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.peBruto);
+    rows=[['ID Único','Chofer','Placa','Detalle','Peso entrada','Peso salida','Peso neto','Andén','Despachador','Tiempo carga'],...items.map(r=>[r.uid,r.chofer,r.placa,r.detalle,r.peBruto||'',r.peSalida||'',r.peNeto||'',r.anden||'',r.despachador||'',r.tiempoC||''])];
+    name='pesos';
+  }else if(tipo==='conductores'){
+    const items=planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.chofer);
+    rows=[['Chofer','Placa','ID Único','Detalle','Estado','Peso neto','Hora ingreso','Hora salida'],...items.map(r=>[r.chofer,r.placa,r.uid,r.detalle,r.estado,r.peNeto||'',r.tsIngreso||'',r.tsGS||''])];
+    name='conductores';
+  }else if(tipo==='andenes'){
+    rows=[['Andén','ID Único','Placa','Despachador','Tiempo carga'],...planData.map(r=>reg[campo(r,'id')]).filter(r=>r&&r.anden).map(r=>[r.anden,r.uid,r.placa,r.despachador||'',r.tiempoC||''])];
+    name='andenes';
+  }else return;
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='agripac_'+name+'_'+fechaSel+'.csv';a.click();
+}
+
+// ══════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════
+function addTL(elId,color,title,sub){
+  const tl=document.getElementById(elId);if(!tl)return;
+  const item=document.createElement('div');item.className='tl-item';
+  item.innerHTML=`<div class="tl-dot" style="background:${color};"></div><div style="flex:1;"><div style="font-size:12px;font-weight:500;">${title}</div><div style="font-size:11px;color:var(--tx2);margin-top:1px;">${sub}</div></div><div class="tl-t">${horaActual()}</div>`;
+  tl.insertBefore(item,tl.firstChild);while(tl.children.length>10)tl.removeChild(tl.lastChild);
+}
+function msg(id,tipo,txt){
+  const el=document.getElementById(id);if(!el)return;
+  const ic=tipo==='ok'?'ti-check':tipo==='warn'?'ti-alert-triangle':'ti-info-circle';
+  el.className='alert a-'+tipo;el.innerHTML=`<i class="ti ${ic}"></i> ${txt}`;el.style.display='flex';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},4000);
+}
+function horaActual(){const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes());}
+
+function copiarTexto(txt, el){
+  navigator.clipboard?.writeText(txt).then(()=>{
+    el.classList.add('copied');
+    setTimeout(()=>el.classList.remove('copied'), 2000);
+  }).catch(()=>{
+    // Fallback para navegadores sin Clipboard API
+    const ta=document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    el.classList.add('copied');
+    setTimeout(()=>el.classList.remove('copied'), 2000);
+  });
+}
+function showTab(tab){
+  detenerTodosScanners();   // ← detiene cámara activa al cambiar tab
+  // Validación de rol — bloquea tabs no permitidos aunque se llame directamente
+  if(currentUser){
+    const permitidos=currentUser?.tabs ?? null;
+    if(permitidos && !permitidos.includes(tab)){
+      console.warn('Acceso denegado al tab:',tab,'para rol:',currentUser?.rol);
+      return;
+    }
+  }
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const sec=document.getElementById('sec-'+tab);
+  const btn=document.getElementById('tab-'+tab);
+  if(sec) sec.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(tab==='granel') cargarGranel();
+}
+function abrir(id){document.getElementById(id).classList.add('open');}
+function cerrar(id){document.getElementById(id).classList.remove('open');}
+
+// ══════════════════════════════════════════════════════════
+// PESTAÑA GRANEL — resumen línea a línea desde la hoja VIAJES
+// ══════════════════════════════════════════════════════════
+let GR=null;
+const GR_ABIERTOS=['ABIERTO','EN TRANSITO','EN DESTINO'];
+const grNum=x=>(x===''||x==null||isNaN(Number(x)))?null:Number(x);
+const grFecha=s=>{ if(!s) return null; const d=new Date(s); return isNaN(d)?null:d; };
+const grKg=n=>n==null?'—':Math.round(n).toLocaleString('es-EC');
+const grTon=n=>n==null?'—':n.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
+const grHora=s=>{ const d=grFecha(s); return d?pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes()):'—'; };
+const grDur=ms=>{ if(ms==null||ms<0) return '—'; const m=Math.round(ms/60000); return Math.floor(m/60)+'h '+pad(m%60)+'m'; };
+const grDia=s=>{ const d=grFecha(s); return d?pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear():'—'; };
+const grMermaColor=n=>n==null?'':n<0?'color:var(--rd);':n>0?'color:var(--gr);':'';
+function grBadge(e){
+  const c={'ABIERTO':'b-garita','EN TRANSITO':'b-pend','EN DESTINO':'b-bascula','COMPLETADO':'b-ok','ANULADO':'b-used',
+           'AGOTADA':'b-used','EN CURSO':'b-pend','PENDIENTE':'b-garita'}[e]||'b-pend';
+  return `<span class="badge ${c}">${esc(e||'—')}</span>`;
+}
+function grLink(url,ico,tit){
+  return /^https:\/\//.test(String(url||''))?`<a href="${esc(url)}" target="_blank" rel="noopener" title="${tit}" style="color:var(--bl);font-size:15px;"><i class="ti ${ico}"></i></a>`:'';
+}
+
+function grRango(dias){
+  const h=new Date(), d=new Date(); d.setDate(d.getDate()-dias);
+  const k=x=>x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate());
+  document.getElementById('gr-desde').value=k(d);
+  document.getElementById('gr-hasta').value=k(h);
+  cargarGranel();
+}
+
+async function cargarGranel(){
+  const desde=document.getElementById('gr-desde').value||hoy();
+  const hasta=document.getElementById('gr-hasta').value||desde;
+  const m=document.getElementById('gr-msg');
+  m.innerHTML='<div class="alert a-info"><i class="ti ti-loader"></i> Cargando datos de granel…</div>';
+  pintarSyncGranel();
+  try{
+    GR=await granelApi('staff_resumen',{desde,hasta});
+    m.innerHTML='';
+    document.getElementById('gr-ts').textContent='Actualizado '+new Date().toLocaleTimeString('es-EC');
+    renderGranel();
+  }catch(e){
+    m.innerHTML=`<div class="alert a-err"><i class="ti ti-alert-triangle"></i> ${esc(e.message)}</div>`;
+  }
+}
+
+function renderGranel(){
+  if(!GR) return;
+  const viajes=GR.viajes||[], rutas=GR.rutas||[], sitios=GR.sitios||[];
+  const vivos=viajes.filter(v=>String(v.ESTADO).toUpperCase()!=='ANULADO');
+  const esComp=v=>String(v.ESTADO).toUpperCase()==='COMPLETADO';
+  const esCurso=v=>GR_ABIERTOS.includes(String(v.ESTADO).toUpperCase());
+
+  // ── Por ruta ──
+  const R={};
+  rutas.forEach(r=>{
+    const aut=grNum(r.VIAJES_AUTORIZADOS)||0, tpv=grNum(r.TON_POR_VIAJE)||0;
+    R[r.ID_RUTA]={r,aut,tpv,realizados:0,comp:0,curso:0,tonReal:0,merma:0,netoOM:0};
+  });
+  vivos.forEach(v=>{
+    const x=R[v.ID_RUTA]; if(!x) return;
+    x.realizados++;
+    if(esCurso(v)) x.curso++;
+    if(esComp(v)){
+      x.comp++;
+      x.tonReal+=(grNum(v.D_NETO_KG)||0)/1000;
+      if(grNum(v.MERMA_KG)!=null){ x.merma+=grNum(v.MERMA_KG); x.netoOM+=grNum(v.O_NETO_KG)||0; }
+    }
+  });
+  const rl=Object.values(R);
+
+  // ── KPIs ──
+  const aut=rl.reduce((s,x)=>s+x.aut,0);
+  const comp=vivos.filter(esComp).length, curso=vivos.filter(esCurso).length;
+  const tonRec=rl.reduce((s,x)=>s+x.tonReal,0);
+  const tonEst=rl.reduce((s,x)=>s+x.aut*x.tpv,0);
+  const tonPend=rl.reduce((s,x)=>s+Math.max(0,x.aut-x.comp)*x.tpv,0);
+  const merma=rl.reduce((s,x)=>s+x.merma,0), netoOM=rl.reduce((s,x)=>s+x.netoOM,0);
+  const trans=vivos.map(v=>{const a=grFecha(v.O_SALIDA),b=grFecha(v.D_LLEGADA);return a&&b?b-a:null;}).filter(x=>x!=null&&x>=0);
+  const setT=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+  setT('gr-k-comp',comp); setT('gr-k-comp-s','de '+aut+' autorizados');
+  setT('gr-k-curso',curso);
+  setT('gr-k-ton',grTon(tonRec)); setT('gr-k-ton-s','vs '+grTon(tonEst)+' estimadas');
+  setT('gr-k-pend',grTon(tonPend));
+  const km=document.getElementById('gr-k-merma'); km.textContent=grKg(merma)+' kg'; km.style.color=merma<0?'var(--rd)':'';
+  setT('gr-k-merma-s',netoOM?(merma/netoOM*100).toFixed(2)+' % del neto de origen':'sin viajes cerrados');
+  setT('gr-k-trans',trans.length?grDur(trans.reduce((a,b)=>a+b,0)/trans.length):'—');
+
+  // ── Por destino ──
+  const tipoDe={}; sitios.forEach(s=>tipoDe[String(s.SITIO).toUpperCase()]={tipo:s.TIPO,cupo:grNum(s.CUPO_TON)});
+  const D={};
+  const dkey=k=>{ k=String(k||'').toUpperCase(); if(!D[k]) D[k]={k,aut:0,comp:0,curso:0,tonEst:0,tonRec:0,tonPend:0,merma:0}; return D[k]; };
+  rl.forEach(x=>{ const d=dkey(x.r.DESTINO); d.aut+=x.aut; d.comp+=x.comp; d.curso+=x.curso;
+    d.tonEst+=x.aut*x.tpv; d.tonRec+=x.tonReal; d.tonPend+=Math.max(0,x.aut-x.comp)*x.tpv; d.merma+=x.merma; });
+  const orden=sitios.map(s=>String(s.SITIO).toUpperCase());
+  const dl=Object.values(D).sort((a,b)=>{const ia=orden.indexOf(a.k),ib=orden.indexOf(b.k);return (ia<0?99:ia)-(ib<0?99:ib);});
+  document.getElementById('gr-dest').innerHTML=dl.length?dl.map(d=>{
+    const t=tipoDe[d.k]||{};
+    return `<tr><td><strong>${esc(d.k)}</strong></td><td style="font-size:11px;color:var(--tx2);">${esc(t.tipo||'—')}</td>
+      <td style="font-family:var(--mono);">${t.cupo!=null?grTon(t.cupo):'—'}</td>
+      <td style="font-family:var(--mono);">${d.aut}</td><td style="font-family:var(--mono);">${d.comp}</td><td style="font-family:var(--mono);">${d.curso}</td>
+      <td style="font-family:var(--mono);">${grTon(d.tonEst)}</td><td style="font-family:var(--mono);font-weight:600;">${grTon(d.tonRec)}</td>
+      <td style="font-family:var(--mono);">${grTon(d.tonPend)}</td><td style="font-family:var(--mono);${grMermaColor(d.merma)}">${grKg(d.merma)}</td></tr>`;
+  }).join(''):'<tr><td colspan="10" class="ec">Sin rutas en el rango</td></tr>';
+
+  // ── Tabla por ruta ──
+  document.getElementById('gr-rutas').innerHTML=rl.length?rl.map(x=>{
+    const r=x.r, est=x.aut&&x.realizados>=x.aut?'AGOTADA':x.realizados?'EN CURSO':'PENDIENTE';
+    return `<tr><td><span class="mt">${esc(r.ID_RUTA)}</span></td><td style="font-size:11px;">${grDia(r.FECHA)}</td>
+      <td>${esc(r.CHOFER)}</td><td><span class="mt">${esc(r.PLACA)}</span></td>
+      <td style="font-size:11px;">${esc(r.ORIGEN)} → ${esc(r.DESTINO)}</td><td>${esc(r.PRODUCTO)}</td><td style="font-size:11px;">${esc(r.BUQUE_LOTE)}</td>
+      <td style="font-family:var(--mono);">${x.comp}/${x.aut}${x.curso?' <span style="color:var(--am);">(+'+x.curso+')</span>':''}</td>
+      <td style="font-family:var(--mono);">${grTon(x.aut*x.tpv)}</td><td style="font-family:var(--mono);font-weight:600;">${grTon(x.tonReal)}</td>
+      <td style="font-family:var(--mono);${grMermaColor(x.merma)}">${grKg(x.merma)}</td><td>${grBadge(est)}</td></tr>`;
+  }).join(''):'<tr><td colspan="12" class="ec">Sin rutas en el rango</td></tr>';
+
+  // ── Movimientos por viaje ──
+  document.getElementById('gr-viajes').innerHTML=grFiltrados().map(v=>{
+    const a=grFecha(v.O_SALIDA), b=grFecha(v.D_LLEGADA);
+    const mk=grNum(v.MERMA_KG), mp=grNum(v.MERMA_PCT);
+    return `<tr>
+      <td><span class="mt" style="font-size:10px;">${esc(v.ID_VIAJE)}</span></td>
+      <td style="font-size:11px;">${grDia(v.FECHA)}</td><td>${esc(v.CHOFER)}</td><td><span class="mt">${esc(v.PLACA)}</span></td>
+      <td style="font-size:11px;">${esc(v.ORIGEN)} → ${esc(v.DESTINO)}</td><td style="font-size:11px;">${esc(v.N_VIAJE)}</td>
+      <td style="font-family:var(--mono);">${grNum(v.TON_ESTIMADAS)!=null?grTon(grNum(v.TON_ESTIMADAS)):'—'}</td>
+      <td style="font-family:var(--mono);">${grKg(grNum(v.O_NETO_KG))}</td><td style="font-family:var(--mono);">${grKg(grNum(v.D_NETO_KG))}</td>
+      <td style="font-family:var(--mono);font-weight:600;${grMermaColor(mk)}">${grKg(mk)}</td>
+      <td style="font-family:var(--mono);${grMermaColor(mk)}">${mp==null?'—':(mp*100).toFixed(2)+'%'}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${grHora(v.O_LLEGADA)}</td><td style="font-family:var(--mono);font-size:11px;">${grHora(v.O_SALIDA)}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${grHora(v.D_LLEGADA)}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${a&&b?grDur(b-a):'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${grHora(v.D_SALIDA)}</td>
+      <td>${grBadge(String(v.ESTADO).toUpperCase())}</td>
+      <td style="white-space:nowrap;">${grLink(v.O_FOTO_AVISO,'ti-ticket','Aviso puerto')} ${grLink(v.O_FOTO_TICKET,'ti-receipt','Ticket origen')} ${grLink(v.D_FOTO_TICKET,'ti-receipt-2','Ticket destino')} ${grLink(v.CARPETA_DRIVE,'ti-folder','Carpeta')}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="18" class="ec">Sin viajes en el rango</td></tr>';
+}
+
+function grFiltrados(){
+  if(!GR) return [];
+  const q=(document.getElementById('gr-q')?.value||'').toLowerCase();
+  const est=document.getElementById('gr-est')?.value||'';
+  return (GR.viajes||[])
+    .filter(v=>!est||String(v.ESTADO).toUpperCase()===est)
+    .filter(v=>!q||[v.ID_VIAJE,v.CHOFER,v.PLACA,v.ORIGEN,v.DESTINO,v.PRODUCTO,v.BUQUE_LOTE].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>String(b.ULTIMA_ACTUALIZACION||'').localeCompare(String(a.ULTIMA_ACTUALIZACION||'')));
+}
+
+function exportarGranel(){
+  const items=grFiltrados(); if(!items.length){alert('No hay viajes para exportar');return;}
+  const cols=['ID_VIAJE','ID_RUTA','FECHA','CODIGO_CONDUCTOR','CHOFER','PLACA','ORIGEN','DESTINO','PRODUCTO','BUQUE_LOTE','N_VIAJE','TON_ESTIMADAS','ESTADO',
+    'O_LLEGADA','O_INGRESO','O_PESAJE_VACIO','O_INICIO_CARGA','O_FIN_CARGA','O_PESAJE_LLENO','O_SALIDA','O_TICKET_NUM','O_NETO_KG',
+    'D_LLEGADA','D_INGRESO','D_PESAJE_LLENO','D_PESAJE_VACIO','D_SALIDA','D_TICKET_NUM','D_NETO_KG','MERMA_KG','MERMA_PCT',
+    'O_FOTO_AVISO','O_FOTO_TICKET','D_FOTO_TICKET','CARPETA_DRIVE'];
+  const fmt=(k,v)=>/^[OD]_(LLEGADA|INGRESO|PESAJE|INICIO|FIN|SALIDA)|^FECHA$/.test(k)&&v?(k==='FECHA'?grDia(v):grHora(v)):v;
+  const rows=[cols].concat(items.map(v=>cols.map(k=>fmt(k,v[k]))));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download='agripac_granel_'+(GR.desde||'')+'_'+(GR.hasta||'')+'.csv'; a.click();
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT_APP — llamado por AUTH tras autenticación exitosa
+// ══════════════════════════════════════════════════════════
+async function INIT_APP(){
+  // Cargar estado de andenes desde Firestore
+  await DB.cargarAndenes();
+  renderAndenes();
+
+  // Configurar fecha y cargar CSV
+  document.getElementById('fecha-filtro').value=hoy();
+  fechaSel=hoy();
+  await cargarCSV();
+
+  // Cargar viajes del día desde Firestore (merge sobre lo cargado del CSV)
+  await DB.cargarViajes(fechaSel);
+  // Viajes de granel que ya estaban en planta (no vienen del CSV)
+  if(inyectarGranelDesdeReg()) aplicarFiltro();
+
+  // Activar listener en tiempo real para el día actual
+  if(_viajesListener) _viajesListener();  // cancelar anterior si existe
+  _viajesListener = DB.escucharViajes(fechaSel, ()=>{
+    if(inyectarGranelDesdeReg()) aplicarFiltro();
+    calcMetrics(); renderPlan(); renderDashboard(); renderGePend();
+  });
+
+  // Navegar al primer tab permitido
+  const permitidos=currentUser?.tabs ?? null;
+  const primerTab=permitidos?permitidos[0]:'dashboard';
+  showTab(primerTab);
+
+  // Fechas por defecto de la pestaña Granel y eventos pendientes de sincronizar
+  const gd=document.getElementById('gr-desde'), gh=document.getElementById('gr-hasta');
+  if(gd&&!gd.value) gd.value=hoy();
+  if(gh&&!gh.value) gh.value=hoy();
+  pintarSyncGranel();
+  flushGranel();
+
+  // Dashboard refresh periódico (una sola vez aunque se vuelva a iniciar sesión)
+  if(!window._dashInt) window._dashInt=setInterval(()=>{renderDashboard();checkAlertas();calcMetrics();},30000);
+}
+
+// ══════════════════════════════════════════════════════════
+// ARRANQUE — Firebase Auth listener (único punto de entrada)
+// ══════════════════════════════════════════════════════════
+AUTH.init();
+</script>
+</div><!-- /app-shell -->
+</body>
+</html>
