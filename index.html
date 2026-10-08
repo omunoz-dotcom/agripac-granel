@@ -675,9 +675,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--gr);}
     </div>
   </div>
   <div class="card">
-    <div class="ct"><i class="ti ti-truck-loading"></i> Cargas en proceso</div>
+    <div class="ct"><i class="ti ti-truck-loading"></i> Cargas y descargas en proceso</div>
     <div class="tw"><table>
-      <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Detalle</th><th>Andén</th><th>Despachador</th><th>Docs</th><th>Tiempo carga</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>ID Único</th><th>Chofer</th><th>Placa</th><th>Detalle</th><th>Andén</th><th>Despachador</th><th>Docs</th><th>Tiempo</th><th>Estado</th><th></th></tr></thead>
       <tbody id="d-activos"><tr><td colspan="10" class="ec">Sin cargas activas</td></tr></tbody>
     </table></div>
   </div>
@@ -1294,25 +1294,39 @@ let cntDown=REFRESH_SEC, cntInt=null;
 
 // ── INFRAESTRUCTURA DE ÁREAS — configurable ──
 // estado: 'libre' | 'ocupado' | 'bloqueado'
+// Infraestructura de planta por zona.
+// uso: 'descarga' (unidades que traen producto) · 'carga' (despacho)
+// corto: texto que se muestra en la cuadrícula (la zona va como encabezado)
 const AREAS_CONFIG = [
-  { id:'patio',     nombre:'Patio de Maniobra',           grupo:'patio',   capacidad:1 },
-  { id:'volteador', nombre:'Volteador',                    grupo:'proceso', capacidad:1 },
-  { id:'b1',        nombre:'Bodega 1',                     grupo:'bodega',  capacidad:1 },
-  { id:'b2',        nombre:'Bodega 2',                     grupo:'bodega',  capacidad:1 },
-  { id:'b3',        nombre:'Bodega 3',                     grupo:'bodega',  capacidad:1 },
-  { id:'b4',        nombre:'Bodega 4',                     grupo:'bodega',  capacidad:1 },
-  { id:'tanques',   nombre:'Tanques de Aceite',            grupo:'bodega',  capacidad:1 },
-  { id:'nexgard',   nombre:'Bodega Nexgard/Desparasitantes',grupo:'especial',capacidad:1 },
-  { id:'a1',        nombre:'Andén 1',                      grupo:'anden',   capacidad:1 },
-  { id:'a2',        nombre:'Andén 2',                      grupo:'anden',   capacidad:1 },
-  { id:'a3',        nombre:'Andén 3',                      grupo:'anden',   capacidad:1 },
-  { id:'a4',        nombre:'Andén 4',                      grupo:'anden',   capacidad:1 },
-  { id:'a5',        nombre:'Andén 5',                      grupo:'anden',   capacidad:1 },
-  { id:'a6',        nombre:'Andén 6',                      grupo:'anden',   capacidad:1 },
-  { id:'a7',        nombre:'Andén 7',                      grupo:'anden',   capacidad:1 },
-  { id:'a8',        nombre:'Andén 8',                      grupo:'anden',   capacidad:1 },
-  { id:'a9',        nombre:'Andén 9',                      grupo:'anden',   capacidad:1 },
+  // ── DESCARGA ──
+  { id:'volteador', zona:'ALMACENERA',    corto:'Volteador',        nombre:'Almacenera · Volteador',          uso:'descarga', capacidad:1 },
+  { id:'b1',        zona:'MATERIA PRIMA', corto:'Bodega 1',         nombre:'Materia Prima · Bodega 1',        uso:'descarga', capacidad:1 },
+  { id:'b2',        zona:'MATERIA PRIMA', corto:'Bodega 2',         nombre:'Materia Prima · Bodega 2',        uso:'descarga', capacidad:1 },
+  { id:'b3',        zona:'MATERIA PRIMA', corto:'Bodega 3',         nombre:'Materia Prima · Bodega 3',        uso:'descarga', capacidad:1 },
+  { id:'b4',        zona:'MATERIA PRIMA', corto:'Bodega 4',         nombre:'Materia Prima · Bodega 4',        uso:'descarga', capacidad:1 },
+  { id:'tanques',   zona:'MATERIA PRIMA', corto:'Tanques de aceite',nombre:'Materia Prima · Tanques de aceite',uso:'descarga', capacidad:1 },
+  // ── CARGA · BPT ──
+  { id:'nexgard',   zona:'BPT',           corto:'Bodega Nexgard',   nombre:'BPT · Bodega Nexgard',            uso:'carga',    capacidad:1 },
+  { id:'bpt-patio', zona:'BPT',           corto:'Patio maniobras',  nombre:'BPT · Patio de maniobras',        uso:'carga',    capacidad:1 },
+  { id:'bpt-a1', zona:'BPT', corto:'Andén 1', nombre:'BPT · Andén 1', uso:'carga', capacidad:1 },
+  { id:'bpt-a2', zona:'BPT', corto:'Andén 2', nombre:'BPT · Andén 2', uso:'carga', capacidad:1 },
+  { id:'bpt-a3', zona:'BPT', corto:'Andén 3', nombre:'BPT · Andén 3', uso:'carga', capacidad:1 },
+  { id:'bpt-a4', zona:'BPT', corto:'Andén 4', nombre:'BPT · Andén 4', uso:'carga', capacidad:1 },
+  { id:'bpt-a5', zona:'BPT', corto:'Andén 5', nombre:'BPT · Andén 5', uso:'carga', capacidad:1 },
+  { id:'bpt-a6', zona:'BPT', corto:'Andén 6', nombre:'BPT · Andén 6', uso:'carga', capacidad:1 },
+  // ── CARGA · PETFOOD ──
+  { id:'pf-patio',  zona:'PETFOOD',       corto:'Patio maniobras',  nombre:'PETFOOD · Patio de maniobras',    uso:'carga',    capacidad:1 },
+  { id:'pf-a1', zona:'PETFOOD', corto:'Andén 1', nombre:'PETFOOD · Andén 1', uso:'carga', capacidad:1 },
+  { id:'pf-a2', zona:'PETFOOD', corto:'Andén 2', nombre:'PETFOOD · Andén 2', uso:'carga', capacidad:1 },
+  { id:'pf-a3', zona:'PETFOOD', corto:'Andén 3', nombre:'PETFOOD · Andén 3', uso:'carga', capacidad:1 },
+  { id:'pf-a4', zona:'PETFOOD', corto:'Andén 4', nombre:'PETFOOD · Andén 4', uso:'carga', capacidad:1 },
+  { id:'pf-a5', zona:'PETFOOD', corto:'Andén 5', nombre:'PETFOOD · Andén 5', uso:'carga', capacidad:1 },
+  { id:'pf-a6', zona:'PETFOOD', corto:'Andén 6', nombre:'PETFOOD · Andén 6', uso:'carga', capacidad:1 },
+  { id:'pf-a7', zona:'PETFOOD', corto:'Andén 7', nombre:'PETFOOD · Andén 7', uso:'carga', capacidad:1 },
+  { id:'pf-a8', zona:'PETFOOD', corto:'Andén 8', nombre:'PETFOOD · Andén 8', uso:'carga', capacidad:1 },
+  { id:'pf-a9', zona:'PETFOOD', corto:'Andén 9', nombre:'PETFOOD · Andén 9', uso:'carga', capacidad:1 },
 ];
+const ZONAS_ORDEN=['ALMACENERA','MATERIA PRIMA','BPT','PETFOOD'];
 
 // Estado en tiempo de ejecución — separado de la config
 let andenes = AREAS_CONFIG.map(a=>({ ...a, libre:true, uid:null, lbl:'' }));
@@ -1320,15 +1334,21 @@ let andenes = AREAS_CONFIG.map(a=>({ ...a, libre:true, uid:null, lbl:'' }));
 // Reglas de asignación automática por área de carga
 // La clave debe coincidir con los valores de la columna M del CSV
 const REGLAS_ASIGNACION = {
-  'PETFOOD':      ['a1','a2','a3','a4','a5','a6','a7','a8','a9','patio'],
+  'PETFOOD':      ['pf-a1','pf-a2','pf-a3','pf-a4','pf-a5','pf-a6','pf-a7','pf-a8','pf-a9','pf-patio'],
   'ALMACENERA':   ['volteador'],
   'MATERIA PRIMA':['b1','b2','b3','b4','tanques'],
-  'BPT':          ['a1','a2','a3','a4','a5','a6','nexgard','patio'],
+  'BPT':          ['bpt-a1','bpt-a2','bpt-a3','bpt-a4','bpt-a5','bpt-a6','nexgard','bpt-patio'],
 };
 
 // Normaliza el valor del área para comparar sin importar mayúsculas/tildes
 function normArea(str){ return (str||'').toUpperCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
+function zonaDe(rv){
+  if(!rv) return null;
+  if(rv.granel) return 'ALMACENERA';
+  const z=normArea(rv.areaCD||'');
+  return ZONAS_ORDEN.find(k=>z && z.includes(normArea(k)))||null;
+}
 function sugerirAndenes(areaCarga){
   if(!areaCarga) return [];
   const key=Object.keys(REGLAS_ASIGNACION).find(k=>normArea(areaCarga).includes(normArea(k)));
@@ -1568,7 +1588,7 @@ function renderDashboard(){
     return`<tr>
       <td><span class="mt">${r.uid}</span></td>
       <td>${r.chofer}</td><td><span class="mt">${r.placa}</span></td>
-      <td>${r.detalle}</td><td>${estadoBadge(r.estado)}</td>
+      <td>${r.detalle}</td><td>${estadoBadge(r.estado, esDescarga(r)?'descarga':'carga')}</td>
       <td>${and?and.nombre:(r.anden||'—')}</td>
       <td style="font-family:var(--mono);font-size:11px;">${elapsed}</td>
     </tr>`;
@@ -1606,9 +1626,11 @@ function checkAlertas(){
 // ══════════════════════════════════════════════════════════
 // PLANIFICACIÓN
 // ══════════════════════════════════════════════════════════
-function estadoBadge(est){
+// op: 'descarga' cambia las etiquetas de carga por descarga
+function esDescarga(rv){ return !!rv && (rv.operacion==='descarga' || (rv.granel && Number(rv.netoOrigenKg)>0)); }
+function estadoBadge(est, op){
   const m={pendiente:'b-pend',garita:' b-garita','garita-entrada':'b-garita','bascula-entrada':'b-bascula',despacho:'b-desp',cargando:'b-carga','bascula-salida':'b-bascula','garita-salida':'b-garita',completado:'b-salida'};
-  const n={pendiente:'Pendiente','garita-entrada':'Garita E.','bascula-entrada':'Báscula E.',despacho:'Despacho',cargando:'⟳ Cargando','bascula-salida':'Báscula S.','garita-salida':'Aut. salida',completado:'Completado'};
+  const n={pendiente:'Pendiente','garita-entrada':'Garita E.','bascula-entrada':'Báscula E.',despacho:'Despacho',cargando:op==='descarga'?'⟳ Descargando':'⟳ Cargando','bascula-salida':'Báscula S.','garita-salida':'Aut. salida',completado:'Completado'};
   return`<span class="badge ${m[est]||'b-pend'}">${n[est]||est}</span>`;
 }
 
@@ -1661,7 +1683,7 @@ function renderPlan(){
       <td><span class="mt">${campo(r,'hora')}</span></td>
       <td>${aproBadge}</td>
       <td>${qrCol}</td>
-      <td>${estadoBadge(est)}</td>
+      <td>${estadoBadge(est, esDescarga(rv)?'descarga':'carga')}</td>
       <td>${accion}</td>
     </tr>`);
 
@@ -2280,9 +2302,16 @@ function geRenderResultado(row, desdeQR){
   `;
 }
 
+// Bodegas externas y puertos: un carro que viene de aquí trae producto → descarga
+const ORIGENES_EXTERNOS=['STOREOCEAN','FERTIORGANICOS','DAJAHU','ALMACOPIO','ECUABULK','ANDIPUERTO'];
+function esOrigenExterno(area){ const a=normArea(area); return !!a && ORIGENES_EXTERNOS.some(o=>a.includes(o)); }
+
 function geAbrirModal(uid){
   const rv=reg[uid];if(!rv)return;
   modalData.uid=uid;
+  // Regla: viene de bodega externa con peso de origen → siempre DESCARGA (no editable)
+  const forzar=!!(rv.granel && Number(rv.netoOrigenKg)>0);
+  const descarga=forzar || !!rv.granel || esOrigenExterno(rv.areaCarga);
   document.getElementById('m-ge-body').innerHTML=`
     <div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;font-size:12px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
@@ -2294,11 +2323,20 @@ function geAbrirModal(uid){
         <div><div class="sl">APROBACIÓN</div><span class="badge b-ok">${rv.apro}</span></div>
       </div>
     </div>
+    ${forzar?`<div class="alert a-info" style="font-size:11px;"><i class="ti ti-truck-delivery"></i>
+      Viene de <strong>${esc(rv.origen||rv.areaCarga)}</strong> con <strong>${Number(rv.netoOrigenKg).toLocaleString('es-EC')} kg</strong> de origen → <strong>DESCARGA</strong></div>`:''}
     <div class="field"><span class="fl">Condición del vehículo</span>
-      <select id="ge-cond"><option value="vacio">Vacío</option><option value="lleno">Lleno</option></select>
+      <select id="ge-cond"${forzar?' disabled':''}><option value="vacio">Vacío</option><option value="lleno"${descarga?' selected':''}>Lleno</option></select>
     </div>
     <div class="field"><span class="fl">Tipo de operación</span>
-      <select id="ge-op"><option value="carga">Carga</option><option value="descarga">Descarga</option></select>
+      <select id="ge-op"${forzar?' disabled':''}>
+        <option value="carga">Carga — despacho (viene a cargar)</option>
+        <option value="descarga"${descarga?' selected':''}>Descarga — recepción (trae producto)</option>
+      </select>
+      <div style="font-size:10px;color:var(--tx3);margin-top:3px;">${forzar
+        ?'Fijado automáticamente: viene de bodega externa con peso de origen.'
+        :descarga?'Sugerido porque procede de una bodega externa. Define qué áreas se asignan en Despacho.'
+        :'Define qué áreas se le asignan en Despacho.'}</div>
     </div>
     <div class="field"><span class="fl">Operador garita</span>
       <input type="text" id="ge-oper" placeholder="Nombre del operador"/>
@@ -2417,7 +2455,7 @@ function dBuscar(){
   const info=`<div style="background:var(--sf2);border-radius:var(--r);padding:.9rem;margin-bottom:10px;font-size:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
       <div><div class="sl">ID</div><span class="mt" style="font-size:10px;">${id}</span></div>
-      <div><div class="sl">ESTADO</div>${estadoBadge(est)}</div>
+      <div><div class="sl">ESTADO</div>${estadoBadge(est, esDescarga(rv)?'descarga':'carga')}</div>
       <div><div class="sl">CHOFER</div><strong>${rv.chofer}</strong></div>
       <div><div class="sl">PLACA</div><span class="mt">${rv.placa}</span></div>
       <div><div class="sl">DETALLE</div>${rv.detalle}</div>
@@ -2432,8 +2470,8 @@ function dBuscar(){
       <div class="alert a-info" style="margin-bottom:10px;"><i class="ti ti-building-warehouse"></i> Andén <strong>${rv.anden||'—'}</strong> · Despachador: <strong>${rv.despachador||'—'}</strong></div>
       <div class="crono ${cr?.running?'run':'stop'}" id="${cid}" style="margin-bottom:10px;">${t}</div>
       <div style="display:flex;gap:6px;">
-        ${est==='despacho'?`<button class="btn btn-success" onclick="dIniciar('${id}')" style="flex:1;"><i class="ti ti-player-play"></i> Iniciar carga</button>`:''}
-        ${est==='cargando'?`<button class="btn btn-danger" onclick="dFinalizar('${id}')" style="flex:1;"><i class="ti ti-player-stop"></i> Finalizar carga</button>`:''}
+        ${est==='despacho'?`<button class="btn btn-success" onclick="dIniciar('${id}')" style="flex:1;"><i class="ti ti-player-play"></i> Iniciar ${esDescarga(rv)?'descarga':'carga'}</button>`:''}
+        ${est==='cargando'?`<button class="btn btn-danger" onclick="dFinalizar('${id}')" style="flex:1;"><i class="ti ti-player-stop"></i> Finalizar ${esDescarga(rv)?'descarga':'carga'}</button>`:''}
       </div>`;
   } else {
     el.innerHTML=info+`<button class="btn btn-primary" onclick="dAbrirConfig('${id}')" style="width:100%;"><i class="ti ti-building-warehouse"></i> Configurar despacho</button>`;
@@ -2442,22 +2480,31 @@ function dBuscar(){
 function dAbrirConfig(uid){
   const rv=reg[uid]; modalData.uid=uid;
   // Granel se descarga en volteador/silos (regla ALMACENERA)
-  const sugeridos=sugerirAndenes(rv.granel?'ALMACENERA':rv.areaCarga);
+  // Segmentación: descarga → solo áreas de recepción · carga → solo áreas de despacho
+  const op=esDescarga(rv)?'descarga':'carga';
+  // Zona de la unidad: granel → ALMACENERA; si no, la columna M de la planificación (PETFOOD, BPT, MATERIA PRIMA…)
+  const zona=zonaDe(rv);
+  const zonaValida=zona && andenes.some(a=>a.zona===zona && a.uso===op);
+  const sirve=a=>a.uso===op && (!zonaValida || a.zona===zona);
+  const sugeridos=sugerirAndenes(rv.granel?'ALMACENERA':(rv.areaCD||rv.areaCarga)).filter(id=>{const a=andenes.find(x=>x.id===id);return a&&sirve(a);});
   renderAndenes(sugeridos);
-  const libres=andenes.filter(a=>a.libre);
-  const makeOpt=a=>{const s=sugeridos.includes(a.id);return`<option value="${a.id}"${s?' selected':''}>${a.nombre}${s?' ★':''}</option>`;};
+  const libres=andenes.filter(a=>a.libre&&sirve(a));
+  const primerSug=sugeridos[0];
+  const makeOpt=a=>{const s=sugeridos.includes(a.id);return`<option value="${a.id}"${a.id===primerSug?' selected':''}>${a.corto||a.nombre}${s?' ★':''}</option>`;};
   document.getElementById('m-desp-body').innerHTML=`
     <div style="background:var(--sf2);border-radius:var(--r);padding:.75rem;margin-bottom:10px;font-size:12px;">
       <strong>${uid}</strong> — ${rv.chofer} · <span class="mt">${rv.placa}</span>
       <div style="margin-top:3px;color:var(--tx2);">Área carga: <strong>${rv.areaCarga||'—'}</strong></div>
+      <div style="margin-top:6px;"><span class="badge ${op==='descarga'?'b-bascula':'b-desp'}">${op==='descarga'?'DESCARGA · áreas de recepción':'CARGA · áreas de despacho'}</span></div>
     </div>
+    ${libres.length?'':`<div class="alert a-warn" style="margin-bottom:10px;font-size:11px;"><i class="ti ti-alert-triangle"></i> No hay áreas de ${op==='descarga'?'recepción':'despacho'} libres. Libere una o use "Otro".</div>`}
     ${sugeridos.length?`<div class="alert a-info" style="margin-bottom:10px;font-size:11px;">
       <i class="ti ti-sparkles"></i> Áreas sugeridas: <strong>${sugeridos.map(id=>andenes.find(a=>a.id===id)?.nombre||id).join(' · ')}</strong>
     </div>`:''}
     <div class="field"><span class="fl">Área / Andén asignado</span>
       <select id="d-anden" style="width:100%;" onchange="document.getElementById('d-anden-manual-wrap').style.display=this.value==='__manual__'?'block':'none'">
         <option value="">— Seleccione área —</option>
-        ${libres.map(makeOpt).join('')}
+        ${ZONAS_ORDEN.map(z=>{const it=libres.filter(a=>a.zona===z);return it.length?`<optgroup label="${z}">${it.map(makeOpt).join('')}</optgroup>`:'';}).join('')}
         <option value="__manual__">Otro (escribir manualmente)</option>
       </select>
     </div>
@@ -2518,7 +2565,7 @@ function dIniciar(uid){
   cronos[uid]={start:Date.now(),elapsed:0,running:true};
   rv.tsIniC=horaActual();
   avanzar(uid,'cargando');
-  audit('Despacho',uid,rv.chofer,rv.placa,'Inicio de carga · andén '+rv.anden);
+  audit('Despacho',uid,rv.chofer,rv.placa,(esDescarga(rv)?'Inicio de descarga · ':'Inicio de carga · ')+rv.anden);
   renderCargasActivas();
   document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
 }
@@ -2529,7 +2576,7 @@ function dFinalizar(uid){
   const a=andenes.find(x=>x.uid===uid);if(a){a.libre=true;a.uid=null;a.lbl='';}
   DB.guardarAndenes();   // ← persiste estado de andenes
   avanzar(uid,'bascula-salida');
-  audit('Despacho',uid,rv.chofer,rv.placa,'Fin carga · tiempo: '+rv.tiempoC);
+  audit('Despacho',uid,rv.chofer,rv.placa,(esDescarga(rv)?'Fin descarga · tiempo: ':'Fin carga · tiempo: ')+rv.tiempoC);
   renderCargasActivas();renderAndenes();
   document.getElementById('d-info').innerHTML='';document.getElementById('d-id').value='';
 }
@@ -2550,26 +2597,25 @@ function renderCargasActivas(){
       <td>${rv.despachador||'—'}</td>
       <td>${rv.docs?'<span class="badge b-ok"><i class="ti ti-check"></i> OK</span>':'<span class="badge b-pend">Pend.</span>'}</td>
       <td><span id="${cid}" style="font-family:var(--mono);font-size:11px;">${t}</span></td>
-      <td>${estadoBadge(rv.estado)}</td><td>${ac}</td>
+      <td>${estadoBadge(rv.estado, esDescarga(rv)?'descarga':'carga')}</td><td>${ac}</td>
     </tr>`;
   }).join('');
 }
 function renderAndenes(sugeridos=[]){
   const grid=document.getElementById('andenes-grid');if(!grid)return;
-  // Agrupar por grupo
-  const grupos={patio:'Patio',proceso:'Proceso',bodega:'Bodegas',anden:'Andenes',especial:'Especial'};
-  const byGrupo={};
-  andenes.forEach(a=>{ if(!byGrupo[a.grupo]) byGrupo[a.grupo]=[]; byGrupo[a.grupo].push(a); });
+  // Agrupar por zona
   let html='';
-  Object.entries(byGrupo).forEach(([g,items])=>{
-    html+=`<div style="grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-top:8px;margin-bottom:2px;">${grupos[g]||g}</div>`;
+  ZONAS_ORDEN.forEach(z=>{
+    const items=andenes.filter(a=>a.zona===z); if(!items.length) return;
+    const uso=items[0].uso==='descarga'?'Descarga':'Carga';
+    html+=`<div style="grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-top:8px;margin-bottom:2px;">${z} <span style="opacity:.7;">· ${uso}</span></div>`;
     items.forEach(a=>{
       const isSug=sugeridos.includes(a.id);
       const crono=cronos[a.uid];
       const cls=a.libre?(isSug?'libre sugerido':'libre'):crono?.running?'cargando':'ocupado';
       const sugBadge=isSug&&a.libre?'<div style="font-size:9px;color:var(--grt);font-weight:600;">★ Sugerido</div>':'';
       html+=`<div class="anden ${cls}" onclick="clickAnden('${a.id}')" title="${a.nombre}">
-        <div class="anden-num" style="font-size:11px;">${a.nombre.split(' ')[0]}<br><span style="font-size:9px;opacity:.7;">${a.nombre.split(' ').slice(1).join(' ')}</span></div>
+        <div class="anden-num" style="font-size:11px;">${a.corto||a.nombre}</div>
         <div class="anden-icon">${a.libre?'<i class="ti ti-parking"></i>':crono?.running?'<i class="ti ti-loader"></i>':'<i class="ti ti-truck"></i>'}</div>
         <div class="anden-sub">${a.libre?'Libre':(a.lbl||'Ocupado')}</div>
         ${sugBadge}
