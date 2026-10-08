@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="theme-color" content="#1D9E75"/>
+<title>AGRIPAC Granel — Conductor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#f3f2ee;--sf:#fff;--sf2:#eceae4;--bd:#d9d7cf;
+  --tx:#161614;--tx2:#55554f;--tx3:#8f8f88;
+  --gr:#1D9E75;--grd:#127a59;--grb:#dff3ea;--grt:#085041;
+  --bl:#185FA5;--blb:#e3eefa;--blt:#042C53;
+  --rd:#C9482A;--rdb:#fbe9e3;--rdt:#4A1B0C;
+  --am:#B06D10;--amb:#fbefd9;--amt:#412402;
+  --r:12px;
+  --font:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{font-size:16px;}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);min-height:100vh;}
+header{background:var(--gr);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5;}
+.badge-ag{background:#fff;color:var(--gr);font-weight:700;font-size:12px;padding:3px 7px;border-radius:5px;letter-spacing:.05em;}
+.h-title{font-weight:600;font-size:15px;line-height:1.1;}
+.h-sub{font-size:11px;opacity:.85;}
+.h-out{margin-left:auto;background:rgba(255,255,255,.18);border:none;color:#fff;font:inherit;font-size:12px;padding:6px 10px;border-radius:8px;}
+main{max-width:520px;margin:0 auto;padding:16px;}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+h2{font-size:18px;margin-bottom:4px;}
+.muted{color:var(--tx2);font-size:13px;}
+label{display:block;font-size:13px;font-weight:500;color:var(--tx2);margin:12px 0 6px;}
+input{width:100%;font:inherit;font-size:18px;padding:14px;border:2px solid var(--bd);border-radius:10px;background:#fff;color:var(--tx);outline:none;}
+input:focus{border-color:var(--gr);}
+input.code{font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-size:17px;font-weight:600;
+  padding:16px;border-radius:12px;border:none;background:var(--gr);color:#fff;margin-top:16px;min-height:56px;}
+.btn:active{background:var(--grd);}
+.btn:disabled{opacity:.45;}
+.btn.sec{background:var(--sf2);color:var(--tx);}
+.btn.blue{background:var(--bl);}
+.err{background:var(--rdb);color:var(--rdt);border-radius:10px;padding:12px;font-size:14px;margin-top:12px;display:none;}
+.ok{background:var(--grb);color:var(--grt);border-radius:10px;padding:12px;font-size:14px;margin-top:12px;}
+.ruta{border:2px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:12px;background:#fff;}
+.ruta.off{opacity:.55;}
+.ruta-od{font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.arrow{color:var(--gr);}
+.ruta-meta{font-size:13px;color:var(--tx2);margin-top:4px;}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:100px;}
+.pill.g{background:var(--grb);color:var(--grt);}
+.pill.a{background:var(--amb);color:var(--amt);}
+.pill.r{background:var(--rdb);color:var(--rdt);}
+.pill.b{background:var(--blb);color:var(--blt);}
+.cnt{font-family:var(--mono);font-size:22px;font-weight:600;}
+.steps{list-style:none;margin-top:6px;}
+.step{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sf2);}
+.step:last-child{border-bottom:none;}
+.dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--sf2);color:var(--tx3);}
+.step.done .dot{background:var(--gr);color:#fff;}
+.step.cur .dot{background:var(--bl);color:#fff;box-shadow:0 0 0 4px var(--blb);}
+.step-l{font-size:14px;flex:1;}
+.step.cur .step-l{font-weight:600;}
+.step-t{font-family:var(--mono);font-size:13px;color:var(--tx2);}
+.side{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-top:12px;}
+.now{border:2px solid var(--bl);background:var(--blb);}
+.now h2{color:var(--blt);}
+.foto-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--bl);border-radius:12px;
+  padding:22px 12px;background:#fff;color:var(--blt);font-weight:600;font-size:15px;text-align:center;}
+.foto-prev{width:100%;border-radius:10px;margin-top:10px;display:none;max-height:320px;object-fit:contain;background:#000;}
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;background:#fff;border-radius:12px;border:2px solid var(--gr);margin-top:12px;}
+.qr-box #qr{background:#fff;padding:8px;}
+.qr-id{font-family:var(--mono);font-size:16px;font-weight:600;word-break:break-all;text-align:center;}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.kv div{background:var(--sf2);border-radius:10px;padding:10px;}
+.kv b{display:block;font-family:var(--mono);font-size:18px;}
+.kv span{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;}
+.loading{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50;}
+.loading.on{display:flex;}
+.loading div{background:#fff;border-radius:14px;padding:22px 26px;font-weight:600;display:flex;gap:12px;align-items:center;}
+.spin{width:22px;height:22px;border:3px solid var(--sf2);border-top-color:var(--gr);border-radius:50%;animation:s 1s linear infinite;}
+@keyframes s{to{transform:rotate(360deg)}}
+.hidden{display:none !important;}
+.foot{text-align:center;font-size:11px;color:var(--tx3);padding:18px 0 30px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="badge-ag">AG</span>
+  <div><div class="h-title">AGRIPAC Granel</div><div class="h-sub" id="h-sub">Registro de viajes</div></div>
+  <button class="h-out hidden" id="btn-salir" onclick="salir()">Salir</button>
+</header>
+
+<main>
+
+  <!-- ══ LOGIN ══ -->
+  <section id="v-login">
+    <div class="card">
+      <h2>Ingreso del conductor</h2>
+      <p class="muted">Use el código que le entregó Logística.</p>
+      <label for="in-codigo">Código</label>
+      <input id="in-codigo" class="code" placeholder="CD-0000" autocomplete="off" autocapitalize="characters"
+        onkeydown="if(event.key==='Enter')document.getElementById('in-pin').focus()"/>
+      <label for="in-pin">Últimos 4 dígitos de su cédula</label>
+      <input id="in-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+        onkeydown="if(event.key==='Enter')ingresar()"/>
+      <button class="btn" id="btn-in" onclick="ingresar()">Ingresar</button>
+      <div class="err" id="err-login"></div>
+    </div>
+  </section>
+
+  <!-- ══ RUTAS ══ -->
+  <section id="v-rutas" class="hidden">
+    <div class="card">
+      <h2 id="saludo">Hola</h2>
+      <p class="muted" id="placa-op"></p>
+    </div>
+    <div id="lista-rutas"></div>
+    <button class="btn sec" onclick="cargarRutas()">Actualizar</button>
+    <div class="err" id="err-rutas"></div>
+  </section>
+
+  <!-- ══ VIAJE ══ -->
+  <section id="v-viaje" class="hidden">
+    <div class="card">
+      <div class="ruta-od" id="vj-od"></div>
+      <div class="ruta-meta" id="vj-meta"></div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;" id="vj-pills"></div>
+    </div>
+
+    <!-- Paso actual -->
+    <div class="card now" id="paso-card">
+      <div class="side" style="margin-top:0;" id="paso-lado"></div>
+      <h2 id="paso-titulo"></h2>
+      <p class="muted">La hora se registra automáticamente al confirmar.</p>
+
+      <div id="f-foto" class="hidden">
+        <label id="foto-lbl">Foto del ticket</label>
+        <label class="foto-btn" for="in-foto" style="margin:0;">
+          <span style="font-size:28px;">📷</span><span id="foto-txt">Tomar foto</span>
+        </label>
+        <input id="in-foto" type="file" accept="image/*" capture="environment" class="hidden" onchange="tomarFoto(this)"/>
+        <img id="foto-prev" class="foto-prev" alt="Vista previa del ticket"/>
+      </div>
+      <div id="f-ticket" class="hidden">
+        <label for="in-ticket">Número del ticket</label>
+        <input id="in-ticket" class="code" autocomplete="off"/>
+      </div>
+      <div id="f-neto" class="hidden">
+        <label for="in-neto">Peso neto en KILOGRAMOS (como dice el ticket)</label>
+        <input id="in-neto" type="number" inputmode="decimal" placeholder="Ej: 31850"/>
+      </div>
+
+      <div id="qr-paso" class="hidden"></div>
+
+      <button class="btn blue" id="btn-paso" onclick="confirmarPaso()">Registrar</button>
+      <div class="err" id="err-paso"></div>
+    </div>
+
+    <!-- Viaje terminado -->
+    <div class="card hidden" id="fin-card">
+      <h2 id="fin-titulo">Viaje completado</h2>
+      <div id="fin-body"></div>
+      <button class="btn" onclick="cargarRutas()">Volver a mis rutas</button>
+    </div>
+
+    <!-- Avance -->
+    <div class="card">
+      <h2 style="font-size:16px;">Avance del viaje</h2>
+      <ul class="steps" id="vj-steps"></ul>
+    </div>
+  </section>
+
+  <div class="foot">AGRIPAC S.A. · Control de transporte de granel</div>
+</main>
+
+<div class="loading" id="loading"><div><span class="spin"></span><span id="loading-txt">Enviando…</span></div></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════════════════════
+const API = 'https://script.google.com/macros/s/AKfycbwkxWCCcS1praEF_bgqasokCJkVU18pYfPFH_pQ3c-nQODFyQbfYg0A2xc-6TVXJhEb/exec';
+const FOTO_MAX_PX = 1600, FOTO_CALIDAD = 0.72;
+
+let S = { token:null, conductor:null, viaje:null, foto:null };
+
+// ── Almacenamiento local seguro ──
+const LS = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+// ══════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════
+async function api(accion, datos, txt){
+  cargando(true, txt);
+  try{
+    const r = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},   // evita preflight CORS
+      body: JSON.stringify(Object.assign({accion, token:S.token}, datos||{}))
+    });
+    const j = await r.json();
+    if(!j.ok){
+      if(/Sesión|sesión|expir|habilitado/.test(j.error||'')){ salir(true); }
+      throw new Error(j.error || 'Error desconocido');
+    }
+    return j;
+  }catch(e){
+    if(e instanceof TypeError) throw new Error('Sin conexión. Revise su señal e intente de nuevo.');
+    throw e;
+  }finally{
+    cargando(false);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════
+async function ingresar(){
+  const codigo = val('in-codigo').toUpperCase(), pin = val('in-pin');
+  ocultarErr('err-login');
+  if(!codigo || !/^\d{4}$/.test(pin)){ mostrarErr('err-login','Ingrese su código y los 4 últimos dígitos de su cédula.'); return; }
+  try{
+    const j = await api('login', {codigo, pin}, 'Verificando…');
+    S.token = j.token; S.conductor = j.conductor;
+    LS.set('agr_sesion', {token:j.token, conductor:j.conductor});
+    LS.set('agr_codigo', codigo);
+    document.getElementById('in-pin').value='';
+    cargarRutas();
+  }catch(e){ mostrarErr('err-login', e.message); }
+}
+
+function salir(silencioso){
+  if(!silencioso && !confirm('¿Cerrar sesión?')) return;
+  S = { token:null, conductor:null, viaje:null, foto:null };
+  LS.del('agr_sesion');
+  ver('v-login');
+  document.getElementById('btn-salir').classList.add('hidden');
+  document.getElementById('h-sub').textContent='Registro de viajes';
+  if(silencioso) mostrarErr('err-login','Su sesión terminó. Ingrese de nuevo.');
+}
+
+// ══════════════════════════════════════════════════════════
+// RUTAS
+// ══════════════════════════════════════════════════════════
+async function cargarRutas(){
+  ocultarErr('err-rutas');
+  try{
+    const j = await api('rutas', {}, 'Cargando rutas…');
+    S.conductor = j.conductor;
+    document.getElementById('btn-salir').classList.remove('hidden');
+    document.getElementById('h-sub').textContent = j.conductor.nombre + ' · ' + j.conductor.placa;
+    if(j.viajeAbierto){ mostrarViaje(j.viajeAbierto); return; }
+    pintarRutas(j);
+    ver('v-rutas');
+  }catch(e){
+    ver(S.token ? 'v-rutas' : 'v-login');
+    mostrarErr(S.token ? 'err-rutas' : 'err-login', e.message);
+  }
+}
+
+function pintarRutas(j){
+  document.getElementById('saludo').textContent = 'Hola, ' + primerNombre(j.conductor.nombre);
+  document.getElementById('placa-op').textContent = 'Placa ' + j.conductor.placa + (j.conductor.operador ? ' · ' + j.conductor.operador : '');
+  const el = document.getElementById('lista-rutas');
+  if(!j.rutas.length){
+    el.innerHTML = `<div class="card"><h2 style="font-size:16px;">No tiene rutas programadas para hoy</h2>
+      <p class="muted">Comuníquese con Logística si debería tener una asignación.</p></div>`;
+    return;
+  }
+  el.innerHTML = j.rutas.map(r=>{
+    const agotada = r.disponibles<=0;
+    return `<div class="ruta ${agotada?'off':''}">
+      <div class="ruta-od">${esc(r.origen)} <span class="arrow">→</span> ${esc(r.destino)}</div>
+      <div class="ruta-meta">${esc(r.producto)}${r.buqueLote?' · '+esc(r.buqueLote):''}${r.tonPorViaje?' · ~'+r.tonPorViaje+' TON por viaje':''}</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;">
+        <div><span class="cnt">${r.realizados}</span><span class="muted"> de ${r.autorizados} viajes</span></div>
+        ${agotada?'<span class="pill r">Agotada</span>':`<span class="pill g">${r.disponibles} disponible${r.disponibles!==1?'s':''}</span>`}
+      </div>
+      ${agotada?'':`<button class="btn" onclick="iniciarViaje('${esc(r.idRuta)}','${esc(r.origen)}','${esc(r.destino)}')">Iniciar viaje ${r.realizados+1}</button>`}
+    </div>`;
+  }).join('');
+}
+
+async function iniciarViaje(idRuta, o, d){
+  if(!confirm('¿Iniciar viaje '+o+' → '+d+'?')) return;
+  ocultarErr('err-rutas');
+  try{
+    const j = await api('iniciar', {idRuta}, 'Creando viaje…');
+    mostrarViaje(j.viaje);
+  }catch(e){ mostrarErr('err-rutas', e.message); cargarRutasSilencioso(); }
+}
+
+async function cargarRutasSilencioso(){
+  try{ const j = await api('rutas', {}, 'Actualizando…'); if(j.viajeAbierto) mostrarViaje(j.viajeAbierto); else pintarRutas(j); }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// VIAJE
+// ══════════════════════════════════════════════════════════
+function mostrarViaje(v){
+  S.viaje = v; S.foto = null;
+  ver('v-viaje');
+  document.getElementById('vj-od').innerHTML = `${esc(v.origen)} <span class="arrow">→</span> ${esc(v.destino)}`;
+  document.getElementById('vj-meta').textContent = v.producto + (v.buqueLote?' · '+v.buqueLote:'') + ' · Viaje ' + v.nViaje;
+  const est = {'ABIERTO':'b','EN TRANSITO':'a','EN DESTINO':'a','COMPLETADO':'g'}[v.estado]||'b';
+  document.getElementById('vj-pills').innerHTML =
+    `<span class="pill ${est}">${esc(v.estado)}</span><span class="pill b" style="font-family:var(--mono);">${esc(v.idViaje)}</span>`;
+
+  // Avance
+  let ladoPrev='';
+  document.getElementById('vj-steps').innerHTML = v.pasos.map((p,i)=>{
+    const cur = p.id===v.siguiente;
+    const cab = p.lado!==ladoPrev ? `<li class="side">${p.lado==='origen'?'En origen · '+esc(v.origen):'En destino · '+esc(v.destino)}</li>` : '';
+    ladoPrev = p.lado;
+    return cab + `<li class="step ${p.hecho?'done':cur?'cur':''}">
+      <span class="dot">${p.hecho?'✓':i+1}</span>
+      <span class="step-l">${esc(p.label)}</span>
+      <span class="step-t">${p.hora?esc(p.hora.split(' ')[1]):''}</span>
+    </li>`;
+  }).join('');
+
+  const sig = v.pasos.find(p=>p.id===v.siguiente);
+  const pc = document.getElementById('paso-card'), fc = document.getElementById('fin-card');
+  ocultarErr('err-paso');
+
+  if(!sig){
+    pc.classList.add('hidden'); fc.classList.remove('hidden');
+    if(v.tipoDestino==='PLANTA'){
+      document.getElementById('fin-titulo').textContent = 'Llegada registrada';
+      document.getElementById('fin-body').innerHTML =
+        `<p class="muted">Presente este código en la garita de planta. Desde aquí continúa el control interno.</p><div id="qr-fin"></div>`;
+      pintarQR('qr-fin', v.idViaje);
+    }else{
+      document.getElementById('fin-titulo').textContent = 'Viaje completado ✓';
+      const m = v.mermaKg;
+      document.getElementById('fin-body').innerHTML = `<div class="kv">
+        <div><span>Neto origen</span><b>${fmtKg(v.netoOrigen)}</b></div>
+        <div><span>Neto destino</span><b>${fmtKg(v.netoDestino)}</b></div>
+        <div style="grid-column:1/-1;"><span>Diferencia</span><b style="color:${m<0?'var(--rd)':'var(--gr)'};">${m==null?'—':(m>0?'+':'')+fmtKg(m)}</b></div>
+      </div>`;
+    }
+    return;
+  }
+
+  pc.classList.remove('hidden'); fc.classList.add('hidden');
+  document.getElementById('paso-lado').textContent = (sig.lado==='origen'?'Origen · '+v.origen:'Destino · '+v.destino);
+  document.getElementById('paso-titulo').textContent = sig.label;
+  mostrar('f-foto', sig.foto); mostrar('f-ticket', sig.ticket); mostrar('f-neto', sig.neto);
+  document.getElementById('foto-lbl').textContent = sig.fotoLabel || 'Foto del ticket';
+  document.getElementById('foto-txt').textContent = 'Tomar foto';
+  const fp = document.getElementById('foto-prev'); fp.style.display='none'; fp.src='';
+  document.getElementById('in-foto').value='';
+  document.getElementById('in-ticket').value='';
+  document.getElementById('in-neto').value='';
+
+  // QR visible mientras va hacia planta
+  const qp = document.getElementById('qr-paso');
+  if(v.tipoDestino==='PLANTA' && sig.lado==='destino'){
+    qp.classList.remove('hidden');
+    qp.innerHTML = `<p class="muted" style="margin-top:10px;">Al llegar, presente este código en garita y registre su llegada.</p><div id="qr-in"></div>`;
+    pintarQR('qr-in', v.idViaje);
+  }else{ qp.classList.add('hidden'); qp.innerHTML=''; }
+
+  document.getElementById('btn-paso').textContent = 'Registrar: ' + sig.label;
+}
+
+async function tomarFoto(input){
+  const f = input.files && input.files[0]; if(!f) return;
+  try{
+    cargando(true,'Preparando foto…');
+    S.foto = await comprimir(f);
+    const fp = document.getElementById('foto-prev'); fp.src = S.foto; fp.style.display='block';
+    document.getElementById('foto-txt').textContent = 'Cambiar foto';
+  }catch(e){ mostrarErr('err-paso','No se pudo leer la foto. Intente de nuevo.'); }
+  finally{ cargando(false); }
+}
+
+async function confirmarPaso(){
+  const v = S.viaje; if(!v) return;
+  const sig = v.pasos.find(p=>p.id===v.siguiente); if(!sig) return;
+  ocultarErr('err-paso');
+  const datos = { idViaje:v.idViaje, paso:sig.id };
+  if(sig.foto && !S.foto){ mostrarErr('err-paso','Tome la foto: '+sig.fotoLabel+'.'); return; }
+  if(sig.ticket){ datos.ticket = val('in-ticket'); if(!datos.ticket){ mostrarErr('err-paso','Ingrese el número del ticket.'); return; } }
+  if(sig.neto){
+    const n = Number(val('in-neto').replace(',','.'));
+    if(!(n>0)){ mostrarErr('err-paso','Ingrese el peso neto en kilogramos.'); return; }
+    if(n<100){ mostrarErr('err-paso','Ese peso parece estar en toneladas. Escríbalo en KILOGRAMOS, como en el ticket.'); return; }
+    datos.netoKg = n;
+  }
+  if(sig.foto) datos.foto = S.foto;
+  const resumen = sig.label + (datos.netoKg?'\nPeso neto: '+fmtKg(datos.netoKg):'') + (datos.ticket?'\nTicket: '+datos.ticket:'');
+  if(!confirm('¿Confirmar?\n\n'+resumen)) return;
+
+  const btn = document.getElementById('btn-paso'); btn.disabled = true;
+  try{
+    const j = await api('paso', datos, sig.foto?'Subiendo foto…':'Registrando…');
+    mostrarViaje(j.viaje);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){
+    mostrarErr('err-paso', e.message);
+    // Si el paso sí se grabó pero se perdió la respuesta, refrescamos el estado real
+    if(!/conexión/.test(e.message)) refrescarViaje();
+  }finally{ btn.disabled = false; }
+}
+
+async function refrescarViaje(){
+  try{ const j = await api('viaje', {idViaje:S.viaje.idViaje}, 'Actualizando…'); mostrarViaje(j.viaje); }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════════════════════
+function comprimir(file){
+  return new Promise((res,rej)=>{
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = ()=>{
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const k = Math.min(1, FOTO_MAX_PX/Math.max(w,h)); w = Math.round(w*k); h = Math.round(h*k);
+      const c = document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', FOTO_CALIDAD));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+function pintarQR(id, txt){
+  const el = document.getElementById(id); if(!el) return;
+  el.innerHTML = `<div class="qr-box"><div id="${id}-c"></div><div class="qr-id">${esc(txt)}</div></div>`;
+  try{ new QRCode(document.getElementById(id+'-c'), {text:txt, width:220, height:220, correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e){}
+}
+function ver(id){ ['v-login','v-rutas','v-viaje'].forEach(v=>document.getElementById(v).classList.toggle('hidden', v!==id)); }
+function mostrar(id, si){ document.getElementById(id).classList.toggle('hidden', !si); }
+function val(id){ return (document.getElementById(id).value||'').trim(); }
+function mostrarErr(id, t){ const e=document.getElementById(id); e.textContent=t; e.style.display='block'; }
+function ocultarErr(id){ const e=document.getElementById(id); if(e) e.style.display='none'; }
+function cargando(on, t){ document.getElementById('loading').classList.toggle('on', !!on); if(t) document.getElementById('loading-txt').textContent=t; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtKg(n){ return n==null||isNaN(n) ? '—' : Number(n).toLocaleString('es-EC')+' kg'; }
+function primerNombre(n){ n=String(n||'').trim().split(/\s+/)[0]||''; return n.charAt(0)+n.slice(1).toLowerCase(); }
+
+// ══════════════════════════════════════════════════════════
+// ARRANQUE — retoma la sesión si existe
+// ══════════════════════════════════════════════════════════
+(function(){
+  const cod = LS.get('agr_codigo'); if(cod) document.getElementById('in-codigo').value = cod;
+  const s = LS.get('agr_sesion');
+  if(s && s.token){ S.token = s.token; S.conductor = s.conductor; cargarRutas(); }
+})();
+</script>
+</body>
+</html>
